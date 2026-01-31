@@ -1,0 +1,10 @@
+{
+    "$schema": "https://unpkg.com/knip@5/schema.json",
+    "entry": ["src/routes/**/*.svelte", "src/lib/index.ts"],
+    "project": ["src/**/*.{ts,svelte}"],
+    "ignore": ["**/*.test.ts", "**/*.spec.ts"],
+    "ignoreDependencies": ["@playwright/test", "prettier-plugin-svelte", "eslint-plugin-svelte"],
+    "svelte": {
+        "entry": ["src/routes/**/*.svelte", "svelte.config.js"]
+    }
+}

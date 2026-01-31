@@ -1,0 +1,7 @@
+build/
+.svelte-kit/
+dist/
+coverage/
+node_modules/
+*.min.js
+playwright-report/
