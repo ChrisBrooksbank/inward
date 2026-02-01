@@ -979,6 +979,7 @@ function getSuggestionsForExercise(
 
 ## Related Specifications
 
+- [P2P Sync Protocol](./P2P-SYNC-PROTOCOL.md) - Sync protocol for vocabulary sharing
 - [Exercise System](./EXERCISE-SYSTEM.md) - Exercise definitions and sessions
 - [Interoception Research](./INTEROCEPTION-RESEARCH.md) - Scientific foundation
 
