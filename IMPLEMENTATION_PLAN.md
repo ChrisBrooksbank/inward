@@ -34,7 +34,7 @@
 ### Phase 1: Foundation
 
 - [x] Add missing domain types to `src/lib/types/domain.ts`: ExerciseCategory enum, ExerciseDifficulty enum, ExercisePhase schema (type, durationSeconds, instruction), Exercise schema (id, title, category, difficulty, bodyRegions, phases), ExerciseSession schema (id, exerciseId, state machine: idle→playing→completed/abandoned, timestamps), MAIAAssessment schema (37 responses, 8 subscale scores), UserProfile schema (id, onboardingComplete, settings). Add unit tests in `domain.test.ts`. (spec: 02-onboarding.md, 03-exercise-system.md)
-- [ ] Create IndexedDB database module with stores for sessions, descriptions, confirmations, assessments, settings, and offline queue (spec: 01-foundation.md)
+- [x] Create IndexedDB database module with stores for sessions, descriptions, confirmations, assessments, settings, and offline queue (spec: 01-foundation.md)
 - [ ] Create Svelte stores: userProfile, exerciseState, vocabularyStore, syncStatus — wired to IndexedDB (spec: 01-foundation.md)
 - [ ] Create base UI components: Button and Card (spec: 01-foundation.md)
 - [ ] Create BottomNav component with 4 tabs: Dashboard, Practice, Words, Progress (spec: 01-foundation.md)
