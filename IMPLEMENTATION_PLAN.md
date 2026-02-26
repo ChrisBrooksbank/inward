@@ -2,7 +2,7 @@
 
 ## Status
 
-- Planning iterations: 3
+- Planning iterations: 4
 - Build iterations: 0
 - Last updated: 2026-02-26
 
@@ -10,8 +10,9 @@
 
 ### What's Already Done
 
-- Full type system with Zod schemas: `src/lib/types/domain.ts` (domain models) and `src/lib/types/sync.ts` (P2P sync types)
+- Vocabulary + P2P types: `src/lib/types/domain.ts` (BodyRegion, SignalType, VocabularyCategory, SharingLevel, SensationDescription, SharedDescription, UserVocabularyProfile) and `src/lib/types/sync.ts`
 - Type tests: `src/lib/types/sync.test.ts`
+- **Missing from domain.ts**: Exercise, ExercisePhase, ExerciseSession, MAIAAssessment, UserProfile schemas (needed before db/stores tasks)
 - PWA configuration (Vite, manifest, service worker)
 - Dev tooling (ESLint, Prettier, Vitest, Playwright, Husky, Knip)
 - Basic skeleton: `+layout.svelte`, `+page.svelte`, `app.html`
@@ -32,6 +33,7 @@
 
 ### Phase 1: Foundation
 
+- [ ] Add missing domain types to `src/lib/types/domain.ts`: ExerciseCategory enum, ExerciseDifficulty enum, ExercisePhase schema (type, durationSeconds, instruction), Exercise schema (id, title, category, difficulty, bodyRegions, phases), ExerciseSession schema (id, exerciseId, state machine: idle→playing→completed/abandoned, timestamps), MAIAAssessment schema (37 responses, 8 subscale scores), UserProfile schema (id, onboardingComplete, settings). Add unit tests in `domain.test.ts`. (spec: 02-onboarding.md, 03-exercise-system.md)
 - [ ] Create IndexedDB database module with stores for sessions, descriptions, confirmations, assessments, settings, and offline queue (spec: 01-foundation.md)
 - [ ] Create Svelte stores: userProfile, exerciseState, vocabularyStore, syncStatus — wired to IndexedDB (spec: 01-foundation.md)
 - [ ] Create base UI components: Button and Card (spec: 01-foundation.md)
