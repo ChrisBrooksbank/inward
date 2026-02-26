@@ -12,3 +12,11 @@ export type ButtonType = (typeof BUTTON_TYPES)[number];
 
 export const CARD_PADDINGS = ['sm', 'md', 'lg'] as const;
 export type CardPadding = (typeof CARD_PADDINGS)[number];
+
+export const NAV_TABS = [
+    { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Practice', path: '/exercises' },
+    { label: 'Words', path: '/vocabulary' },
+    { label: 'Progress', path: '/progress' },
+] as const;
+export type NavTab = (typeof NAV_TABS)[number];
