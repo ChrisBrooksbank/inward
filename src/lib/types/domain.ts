@@ -167,6 +167,209 @@ export const VocabularyConfirmation = z.object({
 
 export type VocabularyConfirmation = z.infer<typeof VocabularyConfirmation>;
 
+// =============================================================================
+// Exercise System Types (from docs/EXERCISE-SYSTEM.md)
+// =============================================================================
+
+/**
+ * Six exercise categories addressing different training mechanisms.
+ */
+export const ExerciseCategory = z.enum([
+    'body-scan',
+    'focused-attention',
+    'movement-integrated',
+    'heartbeat-detection',
+    'breath-awareness',
+    'thermal-awareness',
+]);
+
+export type ExerciseCategory = z.infer<typeof ExerciseCategory>;
+
+/**
+ * Progressive difficulty levels based on signal intensity.
+ */
+export const DifficultyLevel = z.enum(['beginner', 'intermediate', 'advanced']);
+
+export type DifficultyLevel = z.infer<typeof DifficultyLevel>;
+
+/**
+ * Types of phases within an exercise.
+ */
+export const PhaseType = z.enum([
+    'instruction',
+    'movement',
+    'rest',
+    'notice',
+    'describe',
+    'reflect',
+]);
+
+export type PhaseType = z.infer<typeof PhaseType>;
+
+/**
+ * A single phase within an exercise (attention, movement, description, etc.).
+ */
+export const ExercisePhase = z.object({
+    id: z.string(),
+    type: PhaseType,
+    durationSeconds: z.number().min(5).max(120),
+    instruction: z.string(),
+    bodyRegion: BodyRegion.optional(),
+    promptForDescription: z.boolean().default(false),
+    promptForEmotion: z.boolean().default(false),
+});
+
+export type ExercisePhase = z.infer<typeof ExercisePhase>;
+
+/**
+ * Complete exercise definition with phases, difficulty, and unlock criteria.
+ */
+export const Exercise = z.object({
+    id: z.string().uuid(),
+    name: z.string().min(1).max(100),
+    description: z.string().max(500),
+    category: ExerciseCategory,
+    difficulty: DifficultyLevel,
+    bodyRegions: z.array(BodyRegion).min(1),
+    signalTypes: z.array(SignalType).min(1),
+    phases: z.array(ExercisePhase).min(1),
+    totalDurationSeconds: z.number(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+    isBuiltIn: z.boolean().default(true),
+    requiredCompletions: z.number().default(0),
+    requiredLevel: DifficultyLevel.optional(),
+});
+
+export type Exercise = z.infer<typeof Exercise>;
+
+/**
+ * State machine states for an exercise session.
+ */
+export const SessionState = z.enum(['idle', 'playing', 'paused', 'completed', 'abandoned']);
+
+export type SessionState = z.infer<typeof SessionState>;
+
+const PhaseDescription = z.object({
+    phaseId: z.string(),
+    bodyRegion: BodyRegion,
+    text: z.string(),
+    timestamp: z.date(),
+});
+
+const EmotionConnection = z.object({
+    phaseId: z.string(),
+    emotion: z.string(),
+    bodyRegion: BodyRegion,
+    timestamp: z.date(),
+});
+
+/**
+ * Records a single user exercise attempt with state, descriptions, and emotions.
+ */
+export const ExerciseSession = z.object({
+    id: z.string().uuid(),
+    exerciseId: z.string().uuid(),
+    state: SessionState,
+    startedAt: z.date(),
+    completedAt: z.date().optional(),
+    phasesCompleted: z.number(),
+    totalPhases: z.number(),
+    descriptions: z.array(PhaseDescription),
+    emotionConnections: z.array(EmotionConnection),
+    difficultyRating: z.number().min(1).max(5).optional(),
+    notes: z.string().optional(),
+});
+
+export type ExerciseSession = z.infer<typeof ExerciseSession>;
+
+/**
+ * Aggregated user progress for a single exercise (unlock state, completion stats).
+ */
+export const ExerciseProgress = z.object({
+    exerciseId: z.string().uuid(),
+    totalAttempts: z.number(),
+    completedAttempts: z.number(),
+    lastAttemptAt: z.date().optional(),
+    uniqueDescriptions: z.number(),
+    unlocked: z.boolean(),
+    unlockedAt: z.date().optional(),
+});
+
+export type ExerciseProgress = z.infer<typeof ExerciseProgress>;
+
+// =============================================================================
+// MAIA-2 Assessment Types (from docs/INTEROCEPTION-RESEARCH.md)
+// =============================================================================
+
+/**
+ * Eight subscales of the MAIA-2 interoceptive awareness questionnaire.
+ */
+export const MAIASubscale = z.enum([
+    'noticing',
+    'not-distracting',
+    'not-worrying',
+    'attention-regulation',
+    'emotional-awareness',
+    'self-regulation',
+    'body-listening',
+    'trusting',
+]);
+
+export type MAIASubscale = z.infer<typeof MAIASubscale>;
+
+/**
+ * Score for one MAIA-2 subscale (0–5 average of items in that subscale).
+ */
+export const MAIAScore = z.object({
+    subscale: MAIASubscale,
+    score: z.number().min(0).max(5),
+    measuredAt: z.date(),
+});
+
+export type MAIAScore = z.infer<typeof MAIAScore>;
+
+/**
+ * Full MAIA-2 assessment: 37 raw item responses and 8 computed subscale scores.
+ */
+export const MAIAAssessment = z.object({
+    id: z.string().uuid(),
+    responses: z.array(z.number().min(0).max(5)).length(37),
+    scores: z.array(MAIAScore),
+    completedAt: z.date(),
+});
+
+export type MAIAAssessment = z.infer<typeof MAIAAssessment>;
+
+// =============================================================================
+// User Profile (from specs/02-onboarding.md, specs/01-foundation.md)
+// =============================================================================
+
+/**
+ * App-level user preferences stored in IndexedDB.
+ */
+export const UserSettings = z.object({
+    reducedMotion: z.boolean().default(false),
+    fontSize: z.enum(['default', 'large', 'larger']).default('default'),
+    notificationsEnabled: z.boolean().default(false),
+});
+
+export type UserSettings = z.infer<typeof UserSettings>;
+
+/**
+ * User profile tracking onboarding state and settings.
+ */
+export const UserProfile = z.object({
+    id: z.string().uuid(),
+    onboardingComplete: z.boolean().default(false),
+    onboardingStep: z.number().min(0).max(6).default(0),
+    settings: UserSettings,
+    createdAt: z.date(),
+    updatedAt: z.date(),
+});
+
+export type UserProfile = z.infer<typeof UserProfile>;
+
 /**
  * Aggregated vocabulary statistics for a user.
  */

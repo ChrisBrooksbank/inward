@@ -7,6 +7,22 @@ export {
     // Body & Signal
     BodyRegion,
     SignalType,
+    // Exercise System
+    ExerciseCategory,
+    DifficultyLevel,
+    PhaseType,
+    ExercisePhase,
+    Exercise,
+    SessionState,
+    ExerciseSession,
+    ExerciseProgress,
+    // MAIA-2 Assessment
+    MAIASubscale,
+    MAIAScore,
+    MAIAAssessment,
+    // User Profile
+    UserSettings,
+    UserProfile,
     // Vocabulary
     VocabularyCategory,
     SharingLevel,
