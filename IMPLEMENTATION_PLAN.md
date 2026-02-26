@@ -2,7 +2,7 @@
 
 ## Status
 
-- Planning iterations: 2
+- Planning iterations: 3
 - Build iterations: 0
 - Last updated: 2026-02-26
 
@@ -38,15 +38,16 @@
 - [ ] Create BottomNav component with 4 tabs: Dashboard, Practice, Words, Progress (spec: 01-foundation.md)
 - [ ] Create PageShell component and integrate BottomNav into root layout (spec: 01-foundation.md)
 - [ ] Create SvelteKit route groups and stubs: `(app)/` dashboard, `(app)/practice`, `(app)/words`, `(app)/progress`, `(onboarding)/onboarding`, `(exercise)/exercise/[id]` — navigation hidden in `(exercise)` group layout (spec: 01-foundation.md)
-- [ ] Add reduced-motion CSS support and 44×44px touch target enforcement to global styles (spec: 01-foundation.md)
+- [ ] Add reduced-motion CSS support, 44×44px touch target enforcement, and visible focus indicators to global styles (spec: 01-foundation.md)
 
 ### Phase 2: Onboarding
 
+- [ ] Build onboarding shell: step progress indicator (e.g. "Step 2 of 6"), skip button on every step, and persist current step index to IndexedDB so the flow resumes on page refresh (spec: 02-onboarding.md)
 - [ ] Build onboarding steps 1–3: Welcome, What is Interoception, Privacy & Data screens (spec: 02-onboarding.md)
 - [ ] Build MAIA-2 scoring logic: 37 items, 6-point Likert scale, 8 subscale score calculation (Noticing, Not-Distracting, Not-Worrying, Attention Regulation, Emotional Awareness, Self-Regulation, Body Listening, Trusting) with unit tests (spec: 02-onboarding.md)
-- [ ] Build MAIA-2 questionnaire UI component: render items grouped by subscale, collect responses, call scoring logic, save result to IndexedDB (spec: 02-onboarding.md)
-- [ ] Build onboarding steps 5–6: First Exercise intro and Completion screens; save completion flag to IndexedDB (spec: 02-onboarding.md)
-- [ ] Add route guard: redirect unauthenticated/incomplete users to `/onboarding` on first visit (spec: 02-onboarding.md)
+- [ ] Build MAIA-2 questionnaire UI component (step 4, optional/skippable): render items grouped by subscale, collect responses, call scoring logic, save result to IndexedDB (spec: 02-onboarding.md)
+- [ ] Build onboarding steps 5–6: First Exercise intro and Completion screens; save onboarding-complete flag to IndexedDB (spec: 02-onboarding.md)
+- [ ] Add route guard: redirect users who haven't completed onboarding to `/onboarding` on first visit (spec: 02-onboarding.md)
 - [ ] Build radar chart component for MAIA-2 baseline results display (spec: 02-onboarding.md)
 
 ### Phase 3: Exercise System
