@@ -2,7 +2,7 @@
 
 ## Status
 
-- Planning iterations: 1
+- Planning iterations: 2
 - Build iterations: 0
 - Last updated: 2026-02-26
 
@@ -37,13 +37,14 @@
 - [ ] Create base UI components: Button and Card (spec: 01-foundation.md)
 - [ ] Create BottomNav component with 4 tabs: Dashboard, Practice, Words, Progress (spec: 01-foundation.md)
 - [ ] Create PageShell component and integrate BottomNav into root layout (spec: 01-foundation.md)
-- [ ] Create route stubs for all 4 tabs: `/practice`, `/words`, `/progress`, plus `/onboarding` (spec: 01-foundation.md)
+- [ ] Create SvelteKit route groups and stubs: `(app)/` dashboard, `(app)/practice`, `(app)/words`, `(app)/progress`, `(onboarding)/onboarding`, `(exercise)/exercise/[id]` — navigation hidden in `(exercise)` group layout (spec: 01-foundation.md)
 - [ ] Add reduced-motion CSS support and 44×44px touch target enforcement to global styles (spec: 01-foundation.md)
 
 ### Phase 2: Onboarding
 
 - [ ] Build onboarding steps 1–3: Welcome, What is Interoception, Privacy & Data screens (spec: 02-onboarding.md)
-- [ ] Build MAIA-2 assessment component: 37-item questionnaire with 8 subscale scoring (spec: 02-onboarding.md)
+- [ ] Build MAIA-2 scoring logic: 37 items, 6-point Likert scale, 8 subscale score calculation (Noticing, Not-Distracting, Not-Worrying, Attention Regulation, Emotional Awareness, Self-Regulation, Body Listening, Trusting) with unit tests (spec: 02-onboarding.md)
+- [ ] Build MAIA-2 questionnaire UI component: render items grouped by subscale, collect responses, call scoring logic, save result to IndexedDB (spec: 02-onboarding.md)
 - [ ] Build onboarding steps 5–6: First Exercise intro and Completion screens; save completion flag to IndexedDB (spec: 02-onboarding.md)
 - [ ] Add route guard: redirect unauthenticated/incomplete users to `/onboarding` on first visit (spec: 02-onboarding.md)
 - [ ] Build radar chart component for MAIA-2 baseline results display (spec: 02-onboarding.md)
