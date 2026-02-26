@@ -1,0 +1,95 @@
+# Implementation Plan
+
+## Status
+
+- Planning iterations: 1
+- Build iterations: 0
+- Last updated: 2026-02-26
+
+## Notes
+
+### What's Already Done
+
+- Full type system with Zod schemas: `src/lib/types/domain.ts` (domain models) and `src/lib/types/sync.ts` (P2P sync types)
+- Type tests: `src/lib/types/sync.test.ts`
+- PWA configuration (Vite, manifest, service worker)
+- Dev tooling (ESLint, Prettier, Vitest, Playwright, Husky, Knip)
+- Basic skeleton: `+layout.svelte`, `+page.svelte`, `app.html`
+
+### Architectural Decisions
+
+- Use Zod schemas from `src/lib/types/` for all runtime validation — do not redefine
+- Use `idb` (already installed) for all IndexedDB operations
+- Svelte 5 runes (`$state`, `$derived`, `$effect`) for component reactivity
+- Svelte stores (`writable`, `readable`) for cross-component shared state
+- `$lib` alias for all imports from `src/lib/`
+- Functions max 50 lines, complexity max 10, no `any` types (enforced by ESLint)
+- 80% test coverage required — add unit tests alongside each module
+
+---
+
+## Tasks
+
+### Phase 1: Foundation
+
+- [ ] Create IndexedDB database module with stores for sessions, descriptions, confirmations, assessments, settings, and offline queue (spec: 01-foundation.md)
+- [ ] Create Svelte stores: userProfile, exerciseState, vocabularyStore, syncStatus — wired to IndexedDB (spec: 01-foundation.md)
+- [ ] Create base UI components: Button and Card (spec: 01-foundation.md)
+- [ ] Create BottomNav component with 4 tabs: Dashboard, Practice, Words, Progress (spec: 01-foundation.md)
+- [ ] Create PageShell component and integrate BottomNav into root layout (spec: 01-foundation.md)
+- [ ] Create route stubs for all 4 tabs: `/practice`, `/words`, `/progress`, plus `/onboarding` (spec: 01-foundation.md)
+- [ ] Add reduced-motion CSS support and 44×44px touch target enforcement to global styles (spec: 01-foundation.md)
+
+### Phase 2: Onboarding
+
+- [ ] Build onboarding steps 1–3: Welcome, What is Interoception, Privacy & Data screens (spec: 02-onboarding.md)
+- [ ] Build MAIA-2 assessment component: 37-item questionnaire with 8 subscale scoring (spec: 02-onboarding.md)
+- [ ] Build onboarding steps 5–6: First Exercise intro and Completion screens; save completion flag to IndexedDB (spec: 02-onboarding.md)
+- [ ] Add route guard: redirect unauthenticated/incomplete users to `/onboarding` on first visit (spec: 02-onboarding.md)
+- [ ] Build radar chart component for MAIA-2 baseline results display (spec: 02-onboarding.md)
+
+### Phase 3: Exercise System
+
+- [ ] Create seed exercise data: 6 categories × 3 difficulties with 16 body region tags (spec: 03-exercise-system.md)
+- [ ] Build exercise selection screen with category, difficulty, and body region filters (spec: 03-exercise-system.md)
+- [ ] Build exercise player state machine: idle → loading → ready → playing → paused → completed/abandoned/error (spec: 03-exercise-system.md)
+- [ ] Build circular countdown timer component with phase transition animations (spec: 03-exercise-system.md)
+- [ ] Implement all 6 phase types in player: instruction, movement, rest, notice, describe, reflect (spec: 03-exercise-system.md)
+- [ ] Add vocabulary capture UI during "describe" phases and emotion tagging after exercises (spec: 03-exercise-system.md)
+- [ ] Persist completed session data to IndexedDB; implement progressive unlock logic (spec: 03-exercise-system.md)
+
+### Phase 4: Vocabulary
+
+- [ ] Load 25 seed vocabulary terms into IndexedDB on first run (spec: 04-vocabulary.md)
+- [ ] Build personal vocabulary list view grouped by body region (spec: 04-vocabulary.md)
+- [ ] Add search and filter to vocabulary list (by region, signal type, emotion, category) (spec: 04-vocabulary.md)
+- [ ] Build description card component showing vocabulary term, metadata, timestamps, exercise context (spec: 04-vocabulary.md)
+- [ ] Implement sharing levels UI: private (default) → anonymous → attributed toggle on description card (spec: 04-vocabulary.md)
+- [ ] Build shared vocabulary discovery view: browse by body region, sort by confirmation count (spec: 04-vocabulary.md)
+- [ ] Implement "Yes, I feel this too" confirmation action with count update in local store (spec: 04-vocabulary.md)
+- [ ] Add contextual vocabulary suggestions panel after exercise completion (spec: 04-vocabulary.md)
+
+### Phase 5: Progress
+
+- [ ] Build quick stats row: total sessions, unique words, streak days, body regions explored (spec: 05-progress.md)
+- [ ] Build practice streak calendar heatmap component (spec: 05-progress.md)
+- [ ] Build body coverage map component showing practiced regions (spec: 05-progress.md)
+- [ ] Add MAIA-2 radar chart to Progress tab (reuse component from onboarding) (spec: 05-progress.md)
+- [ ] Build insights engine: 5 insight types with 8 generation rules, max 3 shown at once (spec: 05-progress.md)
+- [ ] Build sessions-per-week and vocabulary-growth-over-time charts (spec: 05-progress.md)
+- [ ] Implement data export (full JSON) and delete-all-data with confirmation dialog (spec: 05-progress.md)
+
+### Phase 6: Sync
+
+- [ ] Build REST API client for relay server: POST/GET descriptions, POST confirmations, GET sync delta (spec: 06-sync.md)
+- [ ] Implement device registration: generate and persist anonymous device ID to IndexedDB (spec: 06-sync.md)
+- [ ] Build offline queue: write pending operations to IndexedDB, flush on connectivity restored (spec: 06-sync.md)
+- [ ] Implement delta sync with cursor-based pagination; background sync on app focus + 15-minute interval (spec: 06-sync.md)
+- [ ] Add exponential backoff retry (1s, 2s, 4s, max 30s) and last-write-wins conflict resolution (spec: 06-sync.md)
+- [ ] Build sync status indicator in app header: syncing / synced / offline + last-sync timestamp + manual trigger (spec: 06-sync.md)
+
+---
+
+## Completed
+
+<!-- Completed tasks move here -->
