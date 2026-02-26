@@ -2,7 +2,7 @@
 
 ## Status
 
-- Planning iterations: 4
+- Planning iterations: 5
 - Build iterations: 0
 - Last updated: 2026-02-26
 
@@ -51,6 +51,7 @@
 - [ ] Build onboarding steps 5–6: First Exercise intro and Completion screens; save onboarding-complete flag to IndexedDB (spec: 02-onboarding.md)
 - [ ] Add route guard: redirect users who haven't completed onboarding to `/onboarding` on first visit (spec: 02-onboarding.md)
 - [ ] Build radar chart component for MAIA-2 baseline results display (spec: 02-onboarding.md)
+- [ ] Write Playwright E2E test: complete full onboarding flow (Welcome → MAIA-2 → First Exercise → done flag set in IndexedDB) (spec: 02-onboarding.md)
 
 ### Phase 3: Exercise System
 
@@ -61,6 +62,7 @@
 - [ ] Implement all 6 phase types in player: instruction, movement, rest, notice, describe, reflect (spec: 03-exercise-system.md)
 - [ ] Add vocabulary capture UI during "describe" phases and emotion tagging after exercises (spec: 03-exercise-system.md)
 - [ ] Persist completed session data to IndexedDB; implement progressive unlock logic (spec: 03-exercise-system.md)
+- [ ] Write Playwright E2E test: select and complete a beginner exercise end-to-end (spec: 03-exercise-system.md)
 
 ### Phase 4: Vocabulary
 
@@ -78,13 +80,14 @@
 - [ ] Build quick stats row: total sessions, unique words, streak days, body regions explored (spec: 05-progress.md)
 - [ ] Build practice streak calendar heatmap component (spec: 05-progress.md)
 - [ ] Build body coverage map component showing practiced regions (spec: 05-progress.md)
-- [ ] Add MAIA-2 radar chart to Progress tab (reuse component from onboarding) (spec: 05-progress.md)
+- [ ] Add MAIA-2 radar chart to Progress tab with before/after overlay comparison when multiple assessments exist (reuse component from onboarding) (spec: 05-progress.md)
 - [ ] Build insights engine: 5 insight types with 8 generation rules, max 3 shown at once (spec: 05-progress.md)
 - [ ] Build sessions-per-week and vocabulary-growth-over-time charts (spec: 05-progress.md)
 - [ ] Implement data export (full JSON) and delete-all-data with confirmation dialog (spec: 05-progress.md)
 
 ### Phase 6: Sync
 
+- [ ] Build sync privacy consent UI: one-time opt-in dialog explaining what leaves the device before first sync, stored in settings (spec: 06-sync.md)
 - [ ] Build REST API client for relay server: POST/GET descriptions, POST confirmations, GET sync delta (spec: 06-sync.md)
 - [ ] Implement device registration: generate and persist anonymous device ID to IndexedDB (spec: 06-sync.md)
 - [ ] Build offline queue: write pending operations to IndexedDB, flush on connectivity restored (spec: 06-sync.md)
