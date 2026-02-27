@@ -59,7 +59,7 @@
 - [x] Build exercise selection screen with category, difficulty, and body region filters (spec: 03-exercise-system.md)
 - [x] Build exercise player state machine: idle → loading → ready → playing → paused → completed/abandoned/error (spec: 03-exercise-system.md)
 - [x] Build circular countdown timer component with phase transition animations (spec: 03-exercise-system.md)
-- [ ] Implement all 6 phase types in player: instruction, movement, rest, notice, describe, reflect (spec: 03-exercise-system.md)
+- [x] Implement all 6 phase types in player: instruction, movement, rest, notice, describe, reflect (spec: 03-exercise-system.md)
 - [ ] Add vocabulary capture UI during "describe" phases and emotion tagging after exercises (spec: 03-exercise-system.md)
 - [ ] Persist completed session data to IndexedDB; implement progressive unlock logic (spec: 03-exercise-system.md)
 - [ ] Write Playwright E2E test: select and complete a beginner exercise end-to-end (spec: 03-exercise-system.md)
