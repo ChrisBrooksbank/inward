@@ -91,7 +91,7 @@
 - [x] Build REST API client for relay server: POST/GET descriptions, POST confirmations, GET sync delta (spec: 06-sync.md)
 - [x] Implement device registration: generate and persist anonymous device ID to IndexedDB (spec: 06-sync.md)
 - [x] Build offline queue: write pending operations to IndexedDB, flush on connectivity restored (spec: 06-sync.md)
-- [ ] Implement delta sync with cursor-based pagination; background sync on app focus + 15-minute interval (spec: 06-sync.md)
+- [x] Implement delta sync with cursor-based pagination; background sync on app focus + 15-minute interval (spec: 06-sync.md)
 - [ ] Add exponential backoff retry (1s, 2s, 4s, max 30s) and last-write-wins conflict resolution (spec: 06-sync.md)
 - [ ] Build sync status indicator in app header: syncing / synced / offline + last-sync timestamp + manual trigger (spec: 06-sync.md)
 
