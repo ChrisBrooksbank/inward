@@ -6,5 +6,6 @@ export { default as DescriptionCard } from './vocabulary/DescriptionCard.svelte'
 export { default as VocabSuggestionsPanel } from './vocabulary/VocabSuggestionsPanel.svelte';
 export { default as PageShell } from './PageShell.svelte';
 export { default as QuickStats } from './progress/QuickStats.svelte';
+export { default as StreakCalendar } from './progress/StreakCalendar.svelte';
 export { default as RadarChart } from './RadarChart.svelte';
 export type { ButtonVariant, ButtonType, CardPadding, NavTab } from './component-props';
