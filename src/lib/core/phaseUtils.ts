@@ -69,3 +69,33 @@ export function getEmotionSuggestions(bodyRegion?: BodyRegion): string[] {
     if (!bodyRegion) return DEFAULT_EMOTIONS;
     return REGION_EMOTIONS[bodyRegion] ?? DEFAULT_EMOTIONS;
 }
+
+// =============================================================================
+// Vocabulary suggestions per body region (seed words for describe phases)
+// =============================================================================
+
+const REGION_VOCABULARY: Partial<Record<BodyRegion, string[]>> = {
+    heart: ['pounding', 'racing', 'fluttering', 'steady', 'skipping', 'thumping'],
+    stomach: ['churning', 'tight', 'hollow', 'queasy', 'warm', 'butterflies', 'knot'],
+    lungs: ['tight', 'expanding', 'constricted', 'shallow', 'full'],
+    throat: ['tight', 'lump', 'dry', 'thick', 'constricted'],
+    chest: ['tight', 'heavy', 'open', 'warm', 'pressure'],
+    hands: ['tingling', 'cold', 'warm', 'sweaty', 'trembling'],
+    feet: ['tingling', 'cold', 'warm', 'heavy', 'light'],
+    face: ['hot', 'flushed', 'tight', 'tingling'],
+    shoulders: ['tight', 'heavy', 'raised', 'relaxed', 'knotted'],
+    jaw: ['clenched', 'tight', 'loose', 'aching'],
+    neck: ['stiff', 'tight', 'loose', 'warm'],
+    back: ['tense', 'aching', 'warm', 'curved'],
+    abdomen: ['tight', 'soft', 'churning', 'warm', 'hollow'],
+    forehead: ['tight', 'pressing', 'warm', 'cool'],
+    arms: ['heavy', 'tingling', 'warm', 'cool'],
+    legs: ['heavy', 'tingling', 'warm', 'tired'],
+};
+
+const DEFAULT_VOCABULARY = ['tight', 'warm', 'heavy', 'light', 'tingling', 'soft'];
+
+export function getVocabularySuggestions(bodyRegion?: BodyRegion): string[] {
+    if (!bodyRegion) return DEFAULT_VOCABULARY;
+    return REGION_VOCABULARY[bodyRegion] ?? DEFAULT_VOCABULARY;
+}

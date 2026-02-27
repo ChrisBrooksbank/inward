@@ -10,6 +10,7 @@
         requiresInput,
         isMinimalUI,
         getEmotionSuggestions,
+        getVocabularySuggestions,
     } from '$lib/core/phaseUtils';
 
     const id = $derived($page.params.id ?? '');
@@ -18,6 +19,10 @@
     let pendingDescription = $state('');
     let pendingEmotion = $state<string | null>(null);
     let showExitConfirm = $state(false);
+
+    // Post-exercise emotion tagging (shown on completion screen before "Well done!")
+    let showFinalScreen = $state(false);
+    let postExerciseEmotion = $state<string | null>(null);
 
     // Track previous phase index to save pending data on phase change
     let savedPhaseIndex = -1;
@@ -90,11 +95,33 @@
         await goto('/exercises');
     }
 
+    function handleVocabChip(word: string): void {
+        if (!pendingDescription.trim()) {
+            pendingDescription = word;
+        } else {
+            pendingDescription = `${pendingDescription.trimEnd()} ${word}`;
+        }
+    }
+
+    function handlePostEmotionChip(emotion: string): void {
+        postExerciseEmotion = postExerciseEmotion === emotion ? null : emotion;
+    }
+
+    async function handleSavePostEmotion(): Promise<void> {
+        if (postExerciseEmotion) {
+            await playerStore.addPostExerciseEmotion(postExerciseEmotion);
+        }
+        showFinalScreen = true;
+    }
+
     const ps = $derived($playerStore);
     const phase = $derived($currentPhase);
     const progress = $derived($exerciseProgress);
     const phaseProg = $derived($phaseProgress);
     const emotionSuggestions = $derived(getEmotionSuggestions(phase?.bodyRegion));
+    const describeRegion = $derived(phase?.bodyRegion ?? ps.exercise?.bodyRegions[0]);
+    const vocabSuggestions = $derived(getVocabularySuggestions(describeRegion));
+    const completionEmotions = $derived(getEmotionSuggestions(ps.exercise?.bodyRegions[0]));
     const progressBarWidth = $derived(
         progress.total > 0 ? ((progress.current - 1 + phaseProg) / progress.total) * 100 : 0
     );
@@ -125,14 +152,37 @@
 
         <!-- ── COMPLETED ──────────────────────────────── -->
     {:else if ps.state === 'completed'}
-        <div class="center-screen">
-            <span class="phase-icon" aria-hidden="true">✅</span>
-            <h1 class="screen-title">Well done!</h1>
-            <p class="muted">You completed <strong>{ps.exercise?.name}</strong>.</p>
-            <div class="btn-stack">
-                <button class="btn btn-primary" onclick={handleFinish}>Done</button>
+        {#if !showFinalScreen}
+            <div class="center-screen">
+                <span class="phase-icon" aria-hidden="true">💭</span>
+                <h1 class="screen-title">How did that feel?</h1>
+                <p class="muted">Tag any emotion present during this exercise.</p>
+                <div class="emotion-chips" role="group" aria-label="Overall emotion suggestions">
+                    {#each completionEmotions as emotion (emotion)}
+                        <button
+                            class="chip"
+                            class:active={postExerciseEmotion === emotion}
+                            aria-pressed={postExerciseEmotion === emotion}
+                            onclick={() => handlePostEmotionChip(emotion)}>{emotion}</button
+                        >
+                    {/each}
+                </div>
+                <div class="btn-stack">
+                    <button class="btn btn-primary" onclick={handleSavePostEmotion}>
+                        {postExerciseEmotion ? 'Save' : 'Skip'}
+                    </button>
+                </div>
             </div>
-        </div>
+        {:else}
+            <div class="center-screen">
+                <span class="phase-icon" aria-hidden="true">✅</span>
+                <h1 class="screen-title">Well done!</h1>
+                <p class="muted">You completed <strong>{ps.exercise?.name}</strong>.</p>
+                <div class="btn-stack">
+                    <button class="btn btn-primary" onclick={handleFinish}>Done</button>
+                </div>
+            </div>
+        {/if}
 
         <!-- ── ABANDONED ─────────────────────────────── -->
     {:else if ps.state === 'abandoned'}
@@ -196,6 +246,15 @@
                     {#if pendingDescription.length > 150}
                         <p class="char-count">{200 - pendingDescription.length} characters left</p>
                     {/if}
+                    <div class="emotion-chips" role="group" aria-label="Vocabulary suggestions">
+                        {#each vocabSuggestions as word (word)}
+                            <button
+                                class="chip"
+                                onclick={() => handleVocabChip(word)}
+                                aria-label="Add {word} to description">{word}</button
+                            >
+                        {/each}
+                    </div>
 
                     <!-- Reflect phase: emotion chips + custom input -->
                 {:else if phase.type === 'reflect'}

@@ -193,6 +193,21 @@ function createPlayerStore() {
             update(s => ({ ...s, emotionConnections: [...s.emotionConnections, entry] }));
         },
 
+        async addPostExerciseEmotion(emotion: string): Promise<void> {
+            update(s => {
+                if (!s.exercise) return s;
+                const entry: EmotionConnEntry = {
+                    phaseId: 'post-exercise',
+                    emotion,
+                    bodyRegion: s.exercise.bodyRegions[0],
+                    timestamp: new Date(),
+                };
+                return { ...s, emotionConnections: [...s.emotionConnections, entry] };
+            });
+            const s = get(playerStore);
+            await persistSession(s, 'completed');
+        },
+
         async exit(): Promise<void> {
             stopTimer();
             const s = get(playerStore);

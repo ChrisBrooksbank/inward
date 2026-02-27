@@ -5,6 +5,7 @@ import {
     requiresInput,
     isMinimalUI,
     getEmotionSuggestions,
+    getVocabularySuggestions,
 } from './phaseUtils';
 import type { PhaseType } from '$lib/types/domain';
 
@@ -140,5 +141,47 @@ describe('getEmotionSuggestions', () => {
     it('returns strings for heart region', () => {
         const suggestions = getEmotionSuggestions('heart');
         expect(suggestions.every(s => typeof s === 'string')).toBe(true);
+    });
+});
+
+// =============================================================================
+// getVocabularySuggestions
+// =============================================================================
+
+describe('getVocabularySuggestions', () => {
+    it('returns a non-empty array for known body region', () => {
+        const words = getVocabularySuggestions('heart');
+        expect(words.length).toBeGreaterThan(0);
+    });
+
+    it('returns default vocabulary when no region provided', () => {
+        const words = getVocabularySuggestions();
+        expect(words.length).toBeGreaterThan(0);
+    });
+
+    it('returns default vocabulary for region without specific words', () => {
+        const words = getVocabularySuggestions('feet');
+        expect(words.length).toBeGreaterThan(0);
+    });
+
+    it('returns strings only', () => {
+        const words = getVocabularySuggestions('stomach');
+        expect(words.every(w => typeof w === 'string')).toBe(true);
+    });
+
+    it('includes cardiac words for heart region', () => {
+        const words = getVocabularySuggestions('heart');
+        expect(words).toContain('pounding');
+    });
+
+    it('includes gastric words for stomach region', () => {
+        const words = getVocabularySuggestions('stomach');
+        expect(words).toContain('butterflies');
+    });
+
+    it('returns different suggestions for different regions', () => {
+        const heartWords = getVocabularySuggestions('heart');
+        const stomachWords = getVocabularySuggestions('stomach');
+        expect(heartWords).not.toEqual(stomachWords);
     });
 });
