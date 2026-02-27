@@ -2,13 +2,70 @@
     import { onMount } from 'svelte';
     import { PageShell } from '$lib/components';
     import { vocabularyStore } from '$lib/stores';
-    import { groupByBodyRegion, formatLabel, formatDate } from '$lib/core/vocabularyList';
+    import {
+        groupByBodyRegion,
+        formatLabel,
+        formatDate,
+        filterDescriptions,
+    } from '$lib/core/vocabularyList';
+    import { BodyRegion, SignalType, VocabularyCategory } from '$lib/types/domain';
+    import type {
+        BodyRegion as BR,
+        SignalType as ST,
+        VocabularyCategory as VC,
+    } from '$lib/types/domain';
 
     onMount(() => {
         void vocabularyStore.init();
     });
 
-    const groups = $derived(groupByBodyRegion($vocabularyStore));
+    let searchQuery = $state('');
+    let selectedRegion = $state<BR | null>(null);
+    let selectedSignal = $state<ST | null>(null);
+    let selectedCategory = $state<VC | null>(null);
+
+    const regions = BodyRegion.options;
+    const signals = SignalType.options;
+    const categories = VocabularyCategory.options;
+
+    const filtered = $derived(
+        filterDescriptions($vocabularyStore, {
+            search: searchQuery,
+            region: selectedRegion,
+            signalType: selectedSignal,
+            category: selectedCategory,
+        })
+    );
+
+    const groups = $derived(groupByBodyRegion(filtered));
+
+    function onRegionChange(e: Event): void {
+        const val = (e.target as HTMLSelectElement).value;
+        selectedRegion = val ? (val as BR) : null;
+    }
+
+    function onSignalChange(e: Event): void {
+        const val = (e.target as HTMLSelectElement).value;
+        selectedSignal = val ? (val as ST) : null;
+    }
+
+    function toggleCategory(cat: VC): void {
+        selectedCategory = selectedCategory === cat ? null : cat;
+    }
+
+    function clearFilters(): void {
+        searchQuery = '';
+        selectedRegion = null;
+        selectedSignal = null;
+        selectedCategory = null;
+    }
+
+    const hasFilters = $derived(
+        searchQuery.trim() !== '' ||
+            selectedRegion !== null ||
+            selectedSignal !== null ||
+            selectedCategory !== null
+    );
 </script>
 
 <svelte:head>
@@ -16,13 +73,96 @@
 </svelte:head>
 
 <PageShell title="Words">
-    {#if groups.length === 0}
+    <section class="filters" aria-label="Vocabulary filters">
+        <div class="filter-group">
+            <label class="filter-label" for="vocab-search">Search</label>
+            <input
+                id="vocab-search"
+                class="search-input"
+                type="search"
+                placeholder="Search words or emotions…"
+                bind:value={searchQuery}
+                aria-label="Search vocabulary"
+            />
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label" id="cat-label">Category</span>
+            <div class="chips" role="group" aria-labelledby="cat-label">
+                <button
+                    class="chip"
+                    class:active={selectedCategory === null}
+                    aria-pressed={selectedCategory === null}
+                    onclick={() => (selectedCategory = null)}
+                >
+                    All
+                </button>
+                {#each categories as cat (cat)}
+                    <button
+                        class="chip"
+                        class:active={selectedCategory === cat}
+                        aria-pressed={selectedCategory === cat}
+                        onclick={() => toggleCategory(cat)}
+                    >
+                        {formatLabel(cat)}
+                    </button>
+                {/each}
+            </div>
+        </div>
+
+        <div class="filter-row">
+            <div class="filter-group filter-group--select">
+                <label class="filter-label" for="region-select">Region</label>
+                <select
+                    id="region-select"
+                    class="select"
+                    value={selectedRegion ?? ''}
+                    onchange={onRegionChange}
+                >
+                    <option value="">All regions</option>
+                    {#each regions as region (region)}
+                        <option value={region}>{formatLabel(region)}</option>
+                    {/each}
+                </select>
+            </div>
+
+            <div class="filter-group filter-group--select">
+                <label class="filter-label" for="signal-select">Signal type</label>
+                <select
+                    id="signal-select"
+                    class="select"
+                    value={selectedSignal ?? ''}
+                    onchange={onSignalChange}
+                >
+                    <option value="">All signals</option>
+                    {#each signals as signal (signal)}
+                        <option value={signal}>{formatLabel(signal)}</option>
+                    {/each}
+                </select>
+            </div>
+        </div>
+
+        {#if hasFilters}
+            <button class="clear-btn" onclick={clearFilters} aria-label="Clear all filters">
+                Clear filters
+            </button>
+        {/if}
+    </section>
+
+    <p class="results-count">
+        {filtered.length}
+        {filtered.length === 1 ? 'word' : 'words'}
+    </p>
+
+    {#if $vocabularyStore.length === 0}
         <div class="empty-state" role="status">
             <p class="empty-title">No words yet</p>
             <p class="empty-hint">
                 Describe sensations during exercises to build your personal vocabulary.
             </p>
         </div>
+    {:else if groups.length === 0}
+        <p class="no-results">No words match your filters. Try removing some filters.</p>
     {:else}
         <ul class="region-groups" aria-label="Vocabulary grouped by body region">
             {#each groups as group (group.region)}
@@ -63,6 +203,151 @@
 </PageShell>
 
 <style>
+    .filters {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f9fafb;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .search-input {
+        height: 44px;
+        padding: 0 0.75rem;
+        border: 1.5px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        color: #374151;
+        background: #ffffff;
+        width: 100%;
+    }
+
+    .search-input:focus-visible {
+        outline: 3px solid #4f46e5;
+        outline-offset: 2px;
+    }
+
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0.375rem 0.875rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1.5px solid #d1d5db;
+        background: #ffffff;
+        color: #374151;
+        transition:
+            background-color 0.12s,
+            border-color 0.12s,
+            color 0.12s;
+    }
+
+    .chip:hover:not(.active) {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    .chip:focus-visible {
+        outline: 3px solid #4f46e5;
+        outline-offset: 2px;
+    }
+
+    .chip.active {
+        background: #4f46e5;
+        border-color: #4f46e5;
+        color: #ffffff;
+    }
+
+    .filter-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-group--select {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .select {
+        height: 44px;
+        padding: 0 0.75rem;
+        border: 1.5px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        color: #374151;
+        background: #ffffff;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .select:focus-visible {
+        outline: 3px solid #4f46e5;
+        outline-offset: 2px;
+    }
+
+    .clear-btn {
+        align-self: flex-start;
+        height: 44px;
+        padding: 0 1rem;
+        border: 1.5px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        background: #ffffff;
+        color: #374151;
+        cursor: pointer;
+    }
+
+    .clear-btn:hover {
+        background: #f3f4f6;
+    }
+
+    .clear-btn:focus-visible {
+        outline: 3px solid #4f46e5;
+        outline-offset: 2px;
+    }
+
+    .results-count {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.75rem;
+    }
+
+    .no-results {
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.875rem;
+        padding: 2rem 0;
+    }
+
     .empty-state {
         display: flex;
         flex-direction: column;

@@ -3,7 +3,43 @@
  */
 
 import { BodyRegion } from '$lib/types/domain';
-import type { SensationDescription, BodyRegion as BR } from '$lib/types/domain';
+import type {
+    SensationDescription,
+    BodyRegion as BR,
+    SignalType,
+    VocabularyCategory,
+} from '$lib/types/domain';
+
+export interface VocabularyFilters {
+    search: string;
+    region: BR | null;
+    signalType: SignalType | null;
+    category: VocabularyCategory | null;
+}
+
+function matchesSearch(desc: SensationDescription, q: string): boolean {
+    if (!q) return true;
+    const inText = desc.text.toLowerCase().includes(q);
+    const inEmotion = desc.emotionConnection?.toLowerCase().includes(q) ?? false;
+    return inText || inEmotion;
+}
+
+function matchesVocabularyFilters(desc: SensationDescription, filters: VocabularyFilters): boolean {
+    if (filters.region !== null && desc.bodyRegion !== filters.region) return false;
+    if (filters.signalType !== null && desc.signalType !== filters.signalType) return false;
+    if (filters.category !== null && desc.category !== filters.category) return false;
+    return matchesSearch(desc, filters.search.trim().toLowerCase());
+}
+
+/**
+ * Filters descriptions by search query, body region, signal type, and category.
+ */
+export function filterDescriptions(
+    descriptions: SensationDescription[],
+    filters: VocabularyFilters
+): SensationDescription[] {
+    return descriptions.filter(desc => matchesVocabularyFilters(desc, filters));
+}
 
 export interface VocabularyGroup {
     region: BR;

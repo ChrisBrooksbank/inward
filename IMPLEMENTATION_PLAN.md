@@ -68,7 +68,7 @@
 
 - [x] Load 25 seed vocabulary terms into IndexedDB on first run (spec: 04-vocabulary.md)
 - [x] Build personal vocabulary list view grouped by body region (spec: 04-vocabulary.md)
-- [ ] Add search and filter to vocabulary list (by region, signal type, emotion, category) (spec: 04-vocabulary.md)
+- [x] Add search and filter to vocabulary list (by region, signal type, emotion, category) (spec: 04-vocabulary.md)
 - [ ] Build description card component showing vocabulary term, metadata, timestamps, exercise context (spec: 04-vocabulary.md)
 - [ ] Implement sharing levels UI: private (default) → anonymous → attributed toggle on description card (spec: 04-vocabulary.md)
 - [ ] Build shared vocabulary discovery view: browse by body region, sort by confirmation count (spec: 04-vocabulary.md)
