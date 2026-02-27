@@ -1,7 +1,4 @@
 <script lang="ts">
-    import { page } from '$app/stores';
-    import { BottomNav } from '$lib/components';
-
     const { children } = $props();
 </script>
 
@@ -10,8 +7,6 @@
 </svelte:head>
 
 {@render children()}
-
-<BottomNav currentPath={$page.url.pathname} />
 
 <style>
     :global(*, *::before, *::after) {
