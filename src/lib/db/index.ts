@@ -14,10 +14,12 @@ import type {
     UserProfile,
     BodyRegion,
 } from '$lib/types/domain';
-import type { PendingOperation } from '$lib/types/sync';
+import type { PendingOperation, SyncMetadata } from '$lib/types/sync';
 
 export const DB_NAME = 'inward-db';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
+
+const SYNC_META_KEY = 'device';
 
 export interface InwardDB extends DBSchema {
     sessions: {
@@ -52,6 +54,10 @@ export interface InwardDB extends DBSchema {
         key: string;
         value: PendingOperation;
         indexes: { type: string };
+    };
+    syncMeta: {
+        key: string;
+        value: SyncMetadata;
     };
 }
 
@@ -98,6 +104,9 @@ function upgradeDb(db: Db, oldVersion: number): void {
     }
     if (oldVersion < 2) {
         createSharedDescriptionsStore(db);
+    }
+    if (oldVersion < 3) {
+        db.createObjectStore('syncMeta');
     }
 }
 
@@ -305,4 +314,18 @@ export async function dequeue(id: string): Promise<void> {
 export async function clearQueue(): Promise<void> {
     const db = await getDb();
     await db.clear('offlineQueue');
+}
+
+// =============================================================================
+// Sync Metadata
+// =============================================================================
+
+export async function getSyncMeta(): Promise<SyncMetadata | undefined> {
+    const db = await getDb();
+    return db.get('syncMeta', SYNC_META_KEY);
+}
+
+export async function putSyncMeta(meta: SyncMetadata): Promise<void> {
+    const db = await getDb();
+    await db.put('syncMeta', meta, SYNC_META_KEY);
 }
