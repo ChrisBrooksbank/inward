@@ -15,4 +15,6 @@ export { default as TrendsCharts } from './progress/TrendsCharts.svelte';
 export { default as DataManagement } from './progress/DataManagement.svelte';
 export { default as SyncConsentDialog } from './sync/SyncConsentDialog.svelte';
 export { default as SyncStatusIndicator } from './sync/SyncStatusIndicator.svelte';
+export { default as InstallPrompt } from './pwa/InstallPrompt.svelte';
+export { default as UpdateNotification } from './pwa/UpdateNotification.svelte';
 export type { ButtonVariant, ButtonType, CardPadding, NavTab } from './component-props';

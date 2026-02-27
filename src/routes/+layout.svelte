@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { InstallPrompt, UpdateNotification } from '$lib/components';
+
     const { children } = $props();
 </script>
 
@@ -6,6 +8,8 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </svelte:head>
 
+<UpdateNotification />
+<InstallPrompt />
 {@render children()}
 
 <style>
