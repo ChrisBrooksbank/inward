@@ -15,9 +15,10 @@
 
     interface Props {
         scores: MAIAScore[];
+        compareScores?: MAIAScore[];
     }
 
-    const { scores }: Props = $props();
+    const { scores, compareScores }: Props = $props();
 
     // Chart geometry constants (all in SVG user-space units)
     const CX = 150;
@@ -40,6 +41,17 @@
             })
         )
     );
+
+    const comparePath = $derived(
+        compareScores
+            ? buildPath(
+                  SUBSCALE_ORDER.map((subscale, i) => {
+                      const r = (getScoreValue(compareScores, subscale) / MAX_SCORE) * CHART_R;
+                      return polarToCart(CX, CY, r, axisAngle(i, N));
+                  })
+              )
+            : null
+    );
 </script>
 
 <!--
@@ -54,7 +66,7 @@
         role="img"
         aria-label="Radar chart showing MAIA-2 interoceptive awareness scores"
     >
-        <title>MAIA-2 Baseline Assessment — Radar Chart</title>
+        <title>MAIA-2 Interoceptive Awareness — Radar Chart</title>
 
         <!-- Background grid polygons -->
         {#each GRID_LEVELS as level}
@@ -81,7 +93,26 @@
             />
         {/each}
 
-        <!-- Filled data polygon -->
+        <!-- Baseline (comparison) polygon — rendered behind current -->
+        {#if comparePath}
+            <path
+                d={comparePath}
+                fill="#f59e0b"
+                fill-opacity="0.15"
+                stroke="#f59e0b"
+                stroke-width="2"
+                stroke-linejoin="round"
+                stroke-dasharray="5 3"
+                aria-hidden="true"
+            />
+            {#each SUBSCALE_ORDER as subscale, i}
+                {@const r = (getScoreValue(compareScores!, subscale) / MAX_SCORE) * CHART_R}
+                {@const dot = polarToCart(CX, CY, r, axisAngle(i, N))}
+                <circle cx={dot.x} cy={dot.y} r="3" fill="#f59e0b" aria-hidden="true" />
+            {/each}
+        {/if}
+
+        <!-- Filled data polygon (current) -->
         <path
             d={dataPath}
             fill="#4f46e5"
@@ -92,7 +123,7 @@
             aria-hidden="true"
         />
 
-        <!-- Data point dots at each axis -->
+        <!-- Data point dots at each axis (current) -->
         {#each SUBSCALE_ORDER as subscale, i}
             {@const r = (getScoreValue(scores, subscale) / MAX_SCORE) * CHART_R}
             {@const dot = polarToCart(CX, CY, r, axisAngle(i, N))}
@@ -138,7 +169,8 @@
     <ul class="sr-only" aria-label="MAIA-2 subscale scores">
         {#each SUBSCALE_ORDER as subscale}
             <li>
-                {SUBSCALE_LABELS[subscale]}: {getScoreValue(scores, subscale).toFixed(1)} out of 5
+                {SUBSCALE_LABELS[subscale]}: {getScoreValue(scores, subscale).toFixed(1)} out of 5{#if compareScores}
+                    (baseline: {getScoreValue(compareScores, subscale).toFixed(1)}){/if}
             </li>
         {/each}
     </ul>
