@@ -3,6 +3,7 @@
     import WelcomeStep from '$lib/components/onboarding/WelcomeStep.svelte';
     import InteroceptionStep from '$lib/components/onboarding/InteroceptionStep.svelte';
     import PrivacyStep from '$lib/components/onboarding/PrivacyStep.svelte';
+    import MAIAStep from '$lib/components/onboarding/MAIAStep.svelte';
 </script>
 
 <svelte:head>
@@ -16,6 +17,8 @@
         <InteroceptionStep />
     {:else if $onboardingStep === 2}
         <PrivacyStep />
+    {:else if $onboardingStep === 3}
+        <MAIAStep />
     {:else if $onboardingStep < TOTAL_STEPS}
         <div class="step-placeholder">
             <p>Step {$onboardingStep + 1} – coming soon</p>
