@@ -81,7 +81,7 @@
 - [x] Build practice streak calendar heatmap component (spec: 05-progress.md)
 - [x] Build body coverage map component showing practiced regions (spec: 05-progress.md)
 - [x] Add MAIA-2 radar chart to Progress tab with before/after overlay comparison when multiple assessments exist (reuse component from onboarding) (spec: 05-progress.md)
-- [ ] Build insights engine: 5 insight types with 8 generation rules, max 3 shown at once (spec: 05-progress.md)
+- [x] Build insights engine: 5 insight types with 8 generation rules, max 3 shown at once (spec: 05-progress.md)
 - [ ] Build sessions-per-week and vocabulary-growth-over-time charts (spec: 05-progress.md)
 - [ ] Implement data export (full JSON) and delete-all-data with confirmation dialog (spec: 05-progress.md)
 
