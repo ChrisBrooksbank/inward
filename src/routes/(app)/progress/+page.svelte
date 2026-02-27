@@ -8,6 +8,7 @@
         BodyCoverage,
         MAIAProgressSection,
         InsightCard,
+        TrendsCharts,
     } from '$lib/components';
     import { calculateQuickStats } from '$lib/components/progress/quick-stats';
     import type { QuickStatsData } from '$lib/components/progress/quick-stats';
@@ -15,6 +16,8 @@
     import { buildRegionCoverage } from '$lib/components/progress/body-coverage';
     import { generateInsights } from '$lib/components/progress/insights';
     import type { Insight } from '$lib/components/progress/insights';
+    import { buildSessionsPerWeek, buildVocabularyGrowth } from '$lib/components/progress/trends';
+    import type { WeeklySessionData, VocabGrowthPoint } from '$lib/components/progress/trends';
     import { getAllSessions, getAllDescriptions, getAllAssessments } from '$lib/db';
 
     let stats = $state<QuickStatsData>({
@@ -27,6 +30,8 @@
     let regionCoverage = $state<Map<BodyRegion, number>>(new Map());
     let assessments = $state<MAIAAssessment[]>([]);
     let insights = $state<Insight[]>([]);
+    let sessionsPerWeek = $state<WeeklySessionData[]>([]);
+    let vocabGrowth = $state<VocabGrowthPoint[]>([]);
     let loading = $state(true);
 
     onMount(async () => {
@@ -45,6 +50,8 @@
             descriptions,
             currentStreak: stats.streakDays,
         });
+        sessionsPerWeek = buildSessionsPerWeek(sessions);
+        vocabGrowth = buildVocabularyGrowth(descriptions);
         loading = false;
     });
 </script>
@@ -61,6 +68,7 @@
         <StreakCalendar {practiceData} currentStreak={stats.streakDays} />
         <BodyCoverage practicedRegions={regionCoverage} />
         <MAIAProgressSection {assessments} />
+        <TrendsCharts {sessionsPerWeek} {vocabGrowth} />
         {#if insights.length > 0}
             <section class="insights-section" aria-label="Insights">
                 <h2 class="section-heading">Insights</h2>
