@@ -51,7 +51,7 @@
 - [x] Build onboarding steps 5–6: First Exercise intro and Completion screens; save onboarding-complete flag to IndexedDB (spec: 02-onboarding.md)
 - [x] Add route guard: redirect users who haven't completed onboarding to `/onboarding` on first visit (spec: 02-onboarding.md)
 - [x] Build radar chart component for MAIA-2 baseline results display (spec: 02-onboarding.md)
-- [ ] Write Playwright E2E test: complete full onboarding flow (Welcome → MAIA-2 → First Exercise → done flag set in IndexedDB) (spec: 02-onboarding.md)
+- [x] Write Playwright E2E test: complete full onboarding flow (Welcome → MAIA-2 → First Exercise → done flag set in IndexedDB) (spec: 02-onboarding.md)
 
 ### Phase 3: Exercise System
 
