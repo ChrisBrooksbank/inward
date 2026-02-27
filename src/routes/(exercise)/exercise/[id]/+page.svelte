@@ -3,7 +3,10 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import { playerStore, currentPhase, exerciseProgress, phaseProgress } from '$lib/stores/player';
-    import { CircularTimer } from '$lib/components';
+    import { vocabularyStore, sharedVocabularyStore } from '$lib/stores';
+    import { CircularTimer, VocabSuggestionsPanel } from '$lib/components';
+    import { getContextualSuggestions } from '$lib/components/vocabulary/vocab-suggestions-panel';
+    import type { SensationDescription } from '$lib/types/domain';
     import {
         getPhaseIcon,
         getPhaseLabel,
@@ -22,6 +25,7 @@
 
     // Post-exercise emotion tagging (shown on completion screen before "Well done!")
     let showFinalScreen = $state(false);
+    let showVocabSuggestions = $state(false);
     let postExerciseEmotion = $state<string | null>(null);
 
     // Track previous phase index to save pending data on phase change
@@ -49,6 +53,8 @@
 
     onMount(() => {
         void playerStore.load(id);
+        void vocabularyStore.init();
+        void sharedVocabularyStore.init();
         return () => playerStore.reset();
     });
 
@@ -111,6 +117,15 @@
         if (postExerciseEmotion) {
             await playerStore.addPostExerciseEmotion(postExerciseEmotion);
         }
+        showVocabSuggestions = true;
+    }
+
+    async function handleVocabAdd(desc: SensationDescription): Promise<void> {
+        await vocabularyStore.add(desc);
+    }
+
+    function handleVocabDone(): void {
+        showVocabSuggestions = false;
         showFinalScreen = true;
     }
 
@@ -122,6 +137,13 @@
     const describeRegion = $derived(phase?.bodyRegion ?? ps.exercise?.bodyRegions[0]);
     const vocabSuggestions = $derived(getVocabularySuggestions(describeRegion));
     const completionEmotions = $derived(getEmotionSuggestions(ps.exercise?.bodyRegions[0]));
+    const vocabPanelSuggestions = $derived(
+        getContextualSuggestions(
+            ps.exercise?.bodyRegions ?? [],
+            $sharedVocabularyStore,
+            $vocabularyStore
+        )
+    );
     const progressBarWidth = $derived(
         progress.total > 0 ? ((progress.current - 1 + phaseProg) / progress.total) * 100 : 0
     );
@@ -152,7 +174,7 @@
 
         <!-- ── COMPLETED ──────────────────────────────── -->
     {:else if ps.state === 'completed'}
-        {#if !showFinalScreen}
+        {#if !showVocabSuggestions && !showFinalScreen}
             <div class="center-screen">
                 <span class="phase-icon" aria-hidden="true">💭</span>
                 <h1 class="screen-title">How did that feel?</h1>
@@ -173,6 +195,14 @@
                     </button>
                 </div>
             </div>
+        {:else if showVocabSuggestions}
+            <VocabSuggestionsPanel
+                suggestions={vocabPanelSuggestions}
+                exerciseId={ps.exercise?.id ?? ''}
+                sessionId={ps.sessionId ?? ''}
+                onAdd={handleVocabAdd}
+                onDone={handleVocabDone}
+            />
         {:else}
             <div class="center-screen">
                 <span class="phase-icon" aria-hidden="true">✅</span>

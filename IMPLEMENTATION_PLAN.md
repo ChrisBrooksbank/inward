@@ -73,7 +73,7 @@
 - [x] Implement sharing levels UI: private (default) → anonymous → attributed toggle on description card (spec: 04-vocabulary.md)
 - [x] Build shared vocabulary discovery view: browse by body region, sort by confirmation count (spec: 04-vocabulary.md)
 - [x] Implement "Yes, I feel this too" confirmation action with count update in local store (spec: 04-vocabulary.md)
-- [ ] Add contextual vocabulary suggestions panel after exercise completion (spec: 04-vocabulary.md)
+- [x] Add contextual vocabulary suggestions panel after exercise completion (spec: 04-vocabulary.md)
 
 ### Phase 5: Progress
 
