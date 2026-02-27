@@ -13,4 +13,5 @@ export { default as RadarChart } from './RadarChart.svelte';
 export { default as InsightCard } from './progress/InsightCard.svelte';
 export { default as TrendsCharts } from './progress/TrendsCharts.svelte';
 export { default as DataManagement } from './progress/DataManagement.svelte';
+export { default as SyncConsentDialog } from './sync/SyncConsentDialog.svelte';
 export type { ButtonVariant, ButtonType, CardPadding, NavTab } from './component-props';

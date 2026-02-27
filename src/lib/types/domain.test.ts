@@ -290,6 +290,7 @@ describe('UserSettings', () => {
         expect(result.reducedMotion).toBe(false);
         expect(result.fontSize).toBe('default');
         expect(result.notificationsEnabled).toBe(false);
+        expect(result.syncConsentGiven).toBe(false);
     });
 
     it('should validate explicit settings', () => {

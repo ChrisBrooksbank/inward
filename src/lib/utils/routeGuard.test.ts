@@ -16,7 +16,12 @@ const testProfile: UserProfile = {
     id: '550e8400-e29b-41d4-a716-446655440099',
     onboardingComplete: false,
     onboardingStep: 0,
-    settings: { reducedMotion: false, fontSize: 'default', notificationsEnabled: false },
+    settings: {
+        reducedMotion: false,
+        fontSize: 'default',
+        notificationsEnabled: false,
+        syncConsentGiven: false,
+    },
     createdAt: new Date('2026-01-01T00:00:00Z'),
     updatedAt: new Date('2026-01-01T00:00:00Z'),
 };

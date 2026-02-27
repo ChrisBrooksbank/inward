@@ -352,6 +352,7 @@ export const UserSettings = z.object({
     reducedMotion: z.boolean().default(false),
     fontSize: z.enum(['default', 'large', 'larger']).default('default'),
     notificationsEnabled: z.boolean().default(false),
+    syncConsentGiven: z.boolean().default(false),
 });
 
 export type UserSettings = z.infer<typeof UserSettings>;

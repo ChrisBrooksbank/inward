@@ -15,7 +15,12 @@ function createDefaultProfile(): UserProfile {
         id: crypto.randomUUID(),
         onboardingComplete: false,
         onboardingStep: 0,
-        settings: { reducedMotion: false, fontSize: 'default', notificationsEnabled: false },
+        settings: {
+            reducedMotion: false,
+            fontSize: 'default',
+            notificationsEnabled: false,
+            syncConsentGiven: false,
+        },
         createdAt: now,
         updatedAt: now,
     };
