@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { hasExerciseContext, wasEdited, toCardData } from './description-card';
+import {
+    hasExerciseContext,
+    wasEdited,
+    toCardData,
+    nextSharingLevel,
+    sharingLevelLabel,
+    sharingLevelDescription,
+} from './description-card';
 import type { SensationDescription } from '$lib/types/domain';
 
 // =============================================================================
@@ -135,5 +142,76 @@ describe('toCardData', () => {
     it('preserves the original text', () => {
         const data = toCardData(makeDesc({ text: 'flutter in stomach' }));
         expect(data.text).toBe('flutter in stomach');
+    });
+
+    it('includes sharingLevel from description', () => {
+        const data = toCardData(makeDesc({ sharingLevel: 'anonymous' }));
+        expect(data.sharingLevel).toBe('anonymous');
+    });
+
+    it('includes sharingLabel string', () => {
+        const data = toCardData(makeDesc({ sharingLevel: 'private' }));
+        expect(data.sharingLabel).toBe('Private');
+    });
+
+    it('includes sharingDescription string', () => {
+        const data = toCardData(makeDesc({ sharingLevel: 'private' }));
+        expect(data.sharingDescription.length).toBeGreaterThan(0);
+    });
+});
+
+// =============================================================================
+// nextSharingLevel
+// =============================================================================
+
+describe('nextSharingLevel', () => {
+    it('cycles private → anonymous', () => {
+        expect(nextSharingLevel('private')).toBe('anonymous');
+    });
+
+    it('cycles anonymous → attributed', () => {
+        expect(nextSharingLevel('anonymous')).toBe('attributed');
+    });
+
+    it('cycles attributed → private', () => {
+        expect(nextSharingLevel('attributed')).toBe('private');
+    });
+});
+
+// =============================================================================
+// sharingLevelLabel
+// =============================================================================
+
+describe('sharingLevelLabel', () => {
+    it('returns Private for private', () => {
+        expect(sharingLevelLabel('private')).toBe('Private');
+    });
+
+    it('returns Anonymous for anonymous', () => {
+        expect(sharingLevelLabel('anonymous')).toBe('Anonymous');
+    });
+
+    it('returns Attributed for attributed', () => {
+        expect(sharingLevelLabel('attributed')).toBe('Attributed');
+    });
+});
+
+// =============================================================================
+// sharingLevelDescription
+// =============================================================================
+
+describe('sharingLevelDescription', () => {
+    it('returns a non-empty string for each level', () => {
+        expect(sharingLevelDescription('private').length).toBeGreaterThan(0);
+        expect(sharingLevelDescription('anonymous').length).toBeGreaterThan(0);
+        expect(sharingLevelDescription('attributed').length).toBeGreaterThan(0);
+    });
+
+    it('private description mentions visibility', () => {
+        expect(sharingLevelDescription('private').toLowerCase()).toContain('you');
+    });
+
+    it('anonymous description mentions name', () => {
+        expect(sharingLevelDescription('anonymous').toLowerCase()).toContain('name');
     });
 });
