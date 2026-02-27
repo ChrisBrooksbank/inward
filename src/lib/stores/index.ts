@@ -22,6 +22,7 @@ import {
     putSharedDescription,
     putConfirmation,
     getAllConfirmations,
+    getSyncMeta,
 } from '$lib/db';
 import { initSeedVocabulary } from '$lib/core/vocabulary';
 import { computeConfirmationStatus } from '$lib/core/sharedVocabulary';
@@ -161,10 +162,14 @@ function createSyncStatusStore() {
         update(s => ({ ...s, isOnline: false }));
     }
 
-    function init(): void {
+    async function init(): Promise<void> {
         if (typeof window === 'undefined') return;
         window.addEventListener('online', onOnline);
         window.addEventListener('offline', onOffline);
+        const meta = await getSyncMeta();
+        if (meta?.lastSyncAt) {
+            update(s => ({ ...s, lastSyncAt: meta.lastSyncAt ?? undefined }));
+        }
     }
 
     function patch(status: Partial<SyncStatus>): void {
