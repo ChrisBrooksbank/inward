@@ -77,7 +77,7 @@
 
 ### Phase 5: Progress
 
-- [ ] Build quick stats row: total sessions, unique words, streak days, body regions explored (spec: 05-progress.md)
+- [x] Build quick stats row: total sessions, unique words, streak days, body regions explored (spec: 05-progress.md)
 - [ ] Build practice streak calendar heatmap component (spec: 05-progress.md)
 - [ ] Build body coverage map component showing practiced regions (spec: 05-progress.md)
 - [ ] Add MAIA-2 radar chart to Progress tab with before/after overlay comparison when multiple assessments exist (reuse component from onboarding) (spec: 05-progress.md)
