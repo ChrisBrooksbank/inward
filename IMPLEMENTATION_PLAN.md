@@ -62,7 +62,7 @@
 - [x] Implement all 6 phase types in player: instruction, movement, rest, notice, describe, reflect (spec: 03-exercise-system.md)
 - [x] Add vocabulary capture UI during "describe" phases and emotion tagging after exercises (spec: 03-exercise-system.md)
 - [x] Persist completed session data to IndexedDB; implement progressive unlock logic (spec: 03-exercise-system.md)
-- [ ] Write Playwright E2E test: select and complete a beginner exercise end-to-end (spec: 03-exercise-system.md)
+- [x] Write Playwright E2E test: select and complete a beginner exercise end-to-end (spec: 03-exercise-system.md)
 
 ### Phase 4: Vocabulary
 
