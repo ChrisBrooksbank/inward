@@ -55,7 +55,7 @@
 
 ### Phase 3: Exercise System
 
-- [ ] Create seed exercise data: 6 categories × 3 difficulties with 16 body region tags (spec: 03-exercise-system.md)
+- [x] Create seed exercise data: 6 categories × 3 difficulties with 16 body region tags (spec: 03-exercise-system.md)
 - [ ] Build exercise selection screen with category, difficulty, and body region filters (spec: 03-exercise-system.md)
 - [ ] Build exercise player state machine: idle → loading → ready → playing → paused → completed/abandoned/error (spec: 03-exercise-system.md)
 - [ ] Build circular countdown timer component with phase transition animations (spec: 03-exercise-system.md)
