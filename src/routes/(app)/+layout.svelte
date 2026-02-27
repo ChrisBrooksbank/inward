@@ -1,8 +1,18 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import { BottomNav } from '$lib/components';
+    import { getOnboardingRedirect } from '$lib/utils/routeGuard';
 
     const { children } = $props();
+
+    onMount(async () => {
+        const redirect = await getOnboardingRedirect();
+        if (redirect) {
+            await goto(redirect);
+        }
+    });
 </script>
 
 <div class="app-shell">
