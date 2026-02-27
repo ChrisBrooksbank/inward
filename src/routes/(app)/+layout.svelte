@@ -1,26 +1,67 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
-    import { BottomNav, SyncStatusIndicator } from '$lib/components';
+    import { BottomNav, SyncStatusIndicator, SyncConsentDialog } from '$lib/components';
     import { getOnboardingRedirect } from '$lib/utils/routeGuard';
     import { initSeedVocabulary } from '$lib/core/vocabulary';
     import { syncStatus } from '$lib/stores';
-    import { runDeltaSync } from '$lib/core/deltaSync';
+    import { runDeltaSync, startBackgroundSync } from '$lib/core/deltaSync';
+    import { startOnlineListener } from '$lib/core/offlineQueue';
     import { RelayApiClient } from '$lib/core/apiClient';
+    import { getSettings, putSettings } from '$lib/db';
+    import { hasSyncConsent, acceptSyncConsent } from '$lib/components/sync/sync-consent';
 
     const { children } = $props();
 
-    async function handleSync(): Promise<void> {
-        if ($syncStatus.isSyncing || !$syncStatus.isOnline) return;
+    let showConsentDialog = $state(false);
+    let cleanupSync: (() => void) | undefined;
+    let cleanupOnline: (() => void) | undefined;
+
+    function getClient(): RelayApiClient {
+        return new RelayApiClient();
+    }
+
+    async function doSync(): Promise<void> {
         syncStatus.patch({ isSyncing: true });
         try {
-            const client = new RelayApiClient();
-            await runDeltaSync(client);
+            await runDeltaSync(getClient());
             syncStatus.patch({ isSyncing: false, lastSyncAt: new Date() });
         } catch {
             syncStatus.patch({ isSyncing: false });
+        } finally {
+            await syncStatus.refreshPending();
         }
+    }
+
+    async function handleSync(): Promise<void> {
+        if ($syncStatus.isSyncing || !$syncStatus.isOnline) return;
+        const settings = await getSettings();
+        if (!settings || !hasSyncConsent(settings.settings)) {
+            showConsentDialog = true;
+            return;
+        }
+        await doSync();
+    }
+
+    function startSyncServices(): void {
+        cleanupSync = startBackgroundSync(getClient);
+        cleanupOnline = startOnlineListener(getClient);
+    }
+
+    async function onConsentAccept(): Promise<void> {
+        showConsentDialog = false;
+        const settings = await getSettings();
+        if (settings) {
+            const updated = { ...settings, settings: acceptSyncConsent(settings.settings) };
+            await putSettings(updated);
+        }
+        startSyncServices();
+        await doSync();
+    }
+
+    function onConsentDecline(): void {
+        showConsentDialog = false;
     }
 
     onMount(async () => {
@@ -30,6 +71,16 @@
         }
         await initSeedVocabulary();
         await syncStatus.init();
+
+        const settings = await getSettings();
+        if (settings && hasSyncConsent(settings.settings)) {
+            startSyncServices();
+        }
+    });
+
+    onDestroy(() => {
+        cleanupSync?.();
+        cleanupOnline?.();
     });
 </script>
 
@@ -43,6 +94,12 @@
 
     <BottomNav currentPath={$page.url.pathname} />
 </div>
+
+<SyncConsentDialog
+    open={showConsentDialog}
+    onAccept={onConsentAccept}
+    onDecline={onConsentDecline}
+/>
 
 <style>
     .app-shell {

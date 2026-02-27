@@ -23,6 +23,7 @@ import {
     putConfirmation,
     getAllConfirmations,
     getSyncMeta,
+    getQueue,
 } from '$lib/db';
 import { initSeedVocabulary } from '$lib/core/vocabulary';
 import { computeConfirmationStatus } from '$lib/core/sharedVocabulary';
@@ -170,6 +171,13 @@ function createSyncStatusStore() {
         if (meta?.lastSyncAt) {
             update(s => ({ ...s, lastSyncAt: meta.lastSyncAt ?? undefined }));
         }
+        await refreshPending();
+    }
+
+    async function refreshPending(): Promise<void> {
+        const queue = await getQueue();
+        const failed = queue.filter(op => op.lastError).length;
+        update(s => ({ ...s, pendingOperations: queue.length, failedOperations: failed }));
     }
 
     function patch(status: Partial<SyncStatus>): void {
@@ -180,7 +188,7 @@ function createSyncStatusStore() {
         set(getInitialSyncStatus());
     }
 
-    return { subscribe, init, patch, set, reset };
+    return { subscribe, init, patch, set, reset, refreshPending };
 }
 
 export const syncStatus = createSyncStatusStore();

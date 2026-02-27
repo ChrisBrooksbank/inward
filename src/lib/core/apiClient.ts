@@ -30,6 +30,24 @@ export class RelayApiError extends Error {
     }
 }
 
+/** Error thrown when the relay server is unreachable (network failure). */
+export class ServerUnavailableError extends Error {
+    constructor(message: string, cause?: unknown) {
+        super(message);
+        this.name = 'ServerUnavailableError';
+        this.cause = cause;
+    }
+}
+
+/** Wrapper around fetch() that converts network TypeErrors to ServerUnavailableError. */
+async function safeFetch(input: string, init?: RequestInit): Promise<Response> {
+    try {
+        return await fetch(input, init);
+    } catch (err) {
+        throw new ServerUnavailableError('Server unavailable', err);
+    }
+}
+
 type QueryValue = string | number | boolean;
 
 function toQueryString(params: Record<string, QueryValue | undefined>): string {
@@ -71,7 +89,7 @@ export class RelayApiClient {
 
     /** Share a description with the relay server. */
     async postDescription(req: CreateDescriptionRequest): Promise<CreateDescriptionResponse> {
-        const resp = await fetch(`${this.baseUrl}/descriptions`, {
+        const resp = await safeFetch(`${this.baseUrl}/descriptions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req),
@@ -82,19 +100,19 @@ export class RelayApiClient {
     /** Discover shared descriptions with optional filters. */
     async getDescriptions(filters: DiscoveryFilters = {}): Promise<DiscoveryResponse> {
         const qs = toQueryString(filters as Record<string, QueryValue | undefined>);
-        const resp = await fetch(`${this.baseUrl}/descriptions${qs}`);
+        const resp = await safeFetch(`${this.baseUrl}/descriptions${qs}`);
         return parseResponse(resp, DiscoveryResponse);
     }
 
     /** Fetch a single shared description by ID. */
     async getDescription(id: string): Promise<DescriptionResponse> {
-        const resp = await fetch(`${this.baseUrl}/descriptions/${encodeURIComponent(id)}`);
+        const resp = await safeFetch(`${this.baseUrl}/descriptions/${encodeURIComponent(id)}`);
         return parseResponse(resp, DescriptionResponse);
     }
 
     /** Post a "Yes, I feel this too" confirmation. */
     async postConfirmation(req: CreateConfirmationRequest): Promise<CreateConfirmationResponse> {
-        const resp = await fetch(`${this.baseUrl}/confirmations`, {
+        const resp = await safeFetch(`${this.baseUrl}/confirmations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req),
@@ -105,7 +123,7 @@ export class RelayApiClient {
     /** Fetch delta sync payload for descriptions changed since a cursor. */
     async getSyncDelta(params: SyncQueryParams): Promise<SyncResponse> {
         const qs = toQueryString(params as unknown as Record<string, QueryValue | undefined>);
-        const resp = await fetch(`${this.baseUrl}/sync${qs}`);
+        const resp = await safeFetch(`${this.baseUrl}/sync${qs}`);
         return parseResponse(resp, SyncResponse);
     }
 }

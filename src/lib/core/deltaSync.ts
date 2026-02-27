@@ -128,7 +128,7 @@ export function startBackgroundSync(
     if (typeof window === 'undefined') return () => {};
 
     const runSync = (): void => {
-        void runDeltaSync(getClient());
+        runDeltaSync(getClient()).catch(() => {});
     };
 
     const onVisibilityChange = (): void => {

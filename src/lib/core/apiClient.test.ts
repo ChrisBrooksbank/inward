@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { RelayApiClient, RelayApiError, DEFAULT_BASE_URL } from './apiClient';
+import {
+    RelayApiClient,
+    RelayApiError,
+    ServerUnavailableError,
+    DEFAULT_BASE_URL,
+} from './apiClient';
 
 const BASE = 'https://test.example.com/v1';
 
@@ -191,6 +196,32 @@ describe('RelayApiClient', () => {
                 expect(apiErr.status).toBe(429);
                 expect(apiErr.name).toBe('RelayApiError');
             }
+        });
+    });
+
+    describe('ServerUnavailableError', () => {
+        it('is thrown when fetch rejects with a network error', async () => {
+            vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+            await expect(
+                client.getDescription('11111111-1111-1111-1111-111111111111')
+            ).rejects.toBeInstanceOf(ServerUnavailableError);
+        });
+
+        it('preserves original error as cause', async () => {
+            const original = new TypeError('Failed to fetch');
+            vi.stubGlobal('fetch', vi.fn().mockRejectedValue(original));
+            try {
+                await client.getDescription('11111111-1111-1111-1111-111111111111');
+                expect.fail('should have thrown');
+            } catch (err) {
+                expect(err).toBeInstanceOf(ServerUnavailableError);
+                expect((err as ServerUnavailableError).cause).toBe(original);
+            }
+        });
+
+        it('has correct name property', () => {
+            const err = new ServerUnavailableError('test');
+            expect(err.name).toBe('ServerUnavailableError');
         });
     });
 });

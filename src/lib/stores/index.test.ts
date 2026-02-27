@@ -18,6 +18,7 @@ import {
     putSharedDescription,
     getConfirmationsByDescription,
     getSharedDescription,
+    enqueue,
 } from '$lib/db';
 import type {
     UserProfile,
@@ -295,6 +296,51 @@ describe('syncStatus', () => {
         syncStatus.reset();
         const status = get(syncStatus);
         expect(status.isSyncing).toBe(false);
+        expect(status.pendingOperations).toBe(0);
+        expect(status.failedOperations).toBe(0);
+    });
+});
+
+describe('syncStatus.refreshPending', () => {
+    it('reads pending operations from offline queue', async () => {
+        await enqueue({
+            id: '550e8400-e29b-41d4-a716-446655440020',
+            type: 'share',
+            payload: {},
+            createdAt: new Date(),
+            retryCount: 0,
+        });
+        await syncStatus.refreshPending();
+        const status = get(syncStatus);
+        expect(status.pendingOperations).toBe(1);
+        expect(status.failedOperations).toBe(0);
+    });
+
+    it('counts failed operations with lastError', async () => {
+        await enqueue({
+            id: '550e8400-e29b-41d4-a716-446655440021',
+            type: 'share',
+            payload: {},
+            createdAt: new Date(),
+            retryCount: 2,
+            lastError: 'network error',
+        });
+        await enqueue({
+            id: '550e8400-e29b-41d4-a716-446655440022',
+            type: 'confirm',
+            payload: {},
+            createdAt: new Date(),
+            retryCount: 0,
+        });
+        await syncStatus.refreshPending();
+        const status = get(syncStatus);
+        expect(status.pendingOperations).toBe(2);
+        expect(status.failedOperations).toBe(1);
+    });
+
+    it('returns zero counts with empty queue', async () => {
+        await syncStatus.refreshPending();
+        const status = get(syncStatus);
         expect(status.pendingOperations).toBe(0);
         expect(status.failedOperations).toBe(0);
     });

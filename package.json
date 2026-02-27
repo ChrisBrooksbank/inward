@@ -19,6 +19,7 @@
         "typecheck": "svelte-check --tsconfig ./tsconfig.json",
         "knip": "knip",
         "check": "npm run typecheck && npm run lint && npm run format:check && npm run knip && npm run test:run",
+        "generate:icons": "node scripts/generate-icons.mjs",
         "prepare": "husky"
     },
     "dependencies": {
@@ -45,6 +46,7 @@
         "lint-staged": "^15.0.0",
         "prettier": "^3.0.0",
         "prettier-plugin-svelte": "^3.0.0",
+        "sharp": "^0.34.5",
         "svelte": "^5.0.0",
         "svelte-check": "^4.0.0",
         "typescript": "^5.0.0",
