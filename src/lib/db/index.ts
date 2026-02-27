@@ -8,6 +8,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
     ExerciseSession,
     SensationDescription,
+    SharedDescription,
     VocabularyConfirmation,
     MAIAAssessment,
     UserProfile,
@@ -16,7 +17,7 @@ import type {
 import type { PendingOperation } from '$lib/types/sync';
 
 export const DB_NAME = 'inward-db';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export interface InwardDB extends DBSchema {
     sessions: {
@@ -28,6 +29,11 @@ export interface InwardDB extends DBSchema {
         key: string;
         value: SensationDescription;
         indexes: { bodyRegion: string; sharingLevel: string };
+    };
+    sharedDescriptions: {
+        key: string;
+        value: SharedDescription;
+        indexes: { bodyRegion: string; category: string; confirmationStatus: string };
     };
     confirmations: {
         key: string;
@@ -64,6 +70,13 @@ function createDescriptionsStore(db: Db): void {
     store.createIndex('sharingLevel', 'sharingLevel');
 }
 
+function createSharedDescriptionsStore(db: Db): void {
+    const store = db.createObjectStore('sharedDescriptions', { keyPath: 'id' });
+    store.createIndex('bodyRegion', 'bodyRegion');
+    store.createIndex('category', 'category');
+    store.createIndex('confirmationStatus', 'confirmationStatus');
+}
+
 function createConfirmationsStore(db: Db): void {
     const store = db.createObjectStore('confirmations', { keyPath: 'id' });
     store.createIndex('sharedDescriptionId', 'sharedDescriptionId');
@@ -82,6 +95,9 @@ function upgradeDb(db: Db, oldVersion: number): void {
         db.createObjectStore('assessments', { keyPath: 'id' });
         db.createObjectStore('settings', { keyPath: 'id' });
         createOfflineQueueStore(db);
+    }
+    if (oldVersion < 2) {
+        createSharedDescriptionsStore(db);
     }
 }
 
@@ -159,6 +175,42 @@ export async function getDescriptionsByBodyRegion(
 export async function deleteDescription(id: string): Promise<void> {
     const db = await getDb();
     await db.delete('descriptions', id);
+}
+
+// =============================================================================
+// Shared Descriptions
+// =============================================================================
+
+export async function putSharedDescription(description: SharedDescription): Promise<void> {
+    const db = await getDb();
+    await db.put('sharedDescriptions', description);
+}
+
+export async function getSharedDescription(id: string): Promise<SharedDescription | undefined> {
+    const db = await getDb();
+    return db.get('sharedDescriptions', id);
+}
+
+export async function getAllSharedDescriptions(): Promise<SharedDescription[]> {
+    const db = await getDb();
+    return db.getAll('sharedDescriptions');
+}
+
+export async function getSharedDescriptionsByBodyRegion(
+    bodyRegion: BodyRegion
+): Promise<SharedDescription[]> {
+    const db = await getDb();
+    return db.getAllFromIndex('sharedDescriptions', 'bodyRegion', bodyRegion);
+}
+
+export async function countSharedDescriptions(): Promise<number> {
+    const db = await getDb();
+    return db.count('sharedDescriptions');
+}
+
+export async function deleteSharedDescription(id: string): Promise<void> {
+    const db = await getDb();
+    await db.delete('sharedDescriptions', id);
 }
 
 // =============================================================================

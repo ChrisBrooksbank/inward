@@ -4,6 +4,7 @@
     import { page } from '$app/stores';
     import { BottomNav } from '$lib/components';
     import { getOnboardingRedirect } from '$lib/utils/routeGuard';
+    import { initSeedVocabulary } from '$lib/core/vocabulary';
 
     const { children } = $props();
 
@@ -12,6 +13,7 @@
         if (redirect) {
             await goto(redirect);
         }
+        await initSeedVocabulary();
     });
 </script>
 
