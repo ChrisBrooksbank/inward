@@ -22,5 +22,8 @@
         flex-direction: column;
         justify-content: center;
         padding: 1.5rem;
+        max-width: 640px;
+        margin: 0 auto;
+        width: 100%;
     }
 </style>

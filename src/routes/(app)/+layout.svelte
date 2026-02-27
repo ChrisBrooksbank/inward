@@ -116,6 +116,9 @@
         background-color: #ffffff;
         border-bottom: 1px solid #f3f4f6;
         min-height: 44px;
+        max-width: 640px;
+        margin: 0 auto;
+        width: 100%;
     }
 
     .app-content {

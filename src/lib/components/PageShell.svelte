@@ -36,6 +36,9 @@
         padding: 1rem 1.25rem 0.75rem;
         background-color: #ffffff;
         border-bottom: 1px solid #e5e7eb;
+        max-width: 640px;
+        margin: 0 auto;
+        width: 100%;
     }
 
     .page-header h1 {
@@ -48,5 +51,8 @@
     .page-content {
         flex: 1;
         padding: 1.25rem;
+        max-width: 640px;
+        margin: 0 auto;
+        width: 100%;
     }
 </style>
