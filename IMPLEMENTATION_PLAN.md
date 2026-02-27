@@ -48,7 +48,7 @@
 - [x] Build onboarding steps 1–3: Welcome, What is Interoception, Privacy & Data screens (spec: 02-onboarding.md)
 - [x] Build MAIA-2 scoring logic: 37 items, 6-point Likert scale, 8 subscale score calculation (Noticing, Not-Distracting, Not-Worrying, Attention Regulation, Emotional Awareness, Self-Regulation, Body Listening, Trusting) with unit tests (spec: 02-onboarding.md)
 - [x] Build MAIA-2 questionnaire UI component (step 4, optional/skippable): render items grouped by subscale, collect responses, call scoring logic, save result to IndexedDB (spec: 02-onboarding.md)
-- [ ] Build onboarding steps 5–6: First Exercise intro and Completion screens; save onboarding-complete flag to IndexedDB (spec: 02-onboarding.md)
+- [x] Build onboarding steps 5–6: First Exercise intro and Completion screens; save onboarding-complete flag to IndexedDB (spec: 02-onboarding.md)
 - [ ] Add route guard: redirect users who haven't completed onboarding to `/onboarding` on first visit (spec: 02-onboarding.md)
 - [ ] Build radar chart component for MAIA-2 baseline results display (spec: 02-onboarding.md)
 - [ ] Write Playwright E2E test: complete full onboarding flow (Welcome → MAIA-2 → First Exercise → done flag set in IndexedDB) (spec: 02-onboarding.md)
