@@ -1,13 +1,14 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { PageShell } from '$lib/components';
-    import { vocabularyStore } from '$lib/stores';
+    import { vocabularyStore, sharedVocabularyStore } from '$lib/stores';
     import {
         groupByBodyRegion,
         formatLabel,
         formatDate,
         filterDescriptions,
     } from '$lib/core/vocabularyList';
+    import { groupSharedByBodyRegion, filterSharedByRegion } from '$lib/core/sharedVocabulary';
     import { BodyRegion, SignalType, VocabularyCategory } from '$lib/types/domain';
     import type {
         BodyRegion as BR,
@@ -17,17 +18,26 @@
 
     onMount(() => {
         void vocabularyStore.init();
+        void sharedVocabularyStore.init();
     });
 
+    // ---- view mode ----
+    let viewMode = $state<'my-words' | 'discover'>('my-words');
+
+    // ---- my-words filters ----
     let searchQuery = $state('');
     let selectedRegion = $state<BR | null>(null);
     let selectedSignal = $state<ST | null>(null);
     let selectedCategory = $state<VC | null>(null);
 
+    // ---- discover filter ----
+    let discoverRegion = $state<BR | null>(null);
+
     const regions = BodyRegion.options;
     const signals = SignalType.options;
     const categories = VocabularyCategory.options;
 
+    // ---- my-words derived ----
     const filtered = $derived(
         filterDescriptions($vocabularyStore, {
             search: searchQuery,
@@ -36,9 +46,13 @@
             category: selectedCategory,
         })
     );
-
     const groups = $derived(groupByBodyRegion(filtered));
 
+    // ---- discover derived ----
+    const discoverFiltered = $derived(filterSharedByRegion($sharedVocabularyStore, discoverRegion));
+    const discoverGroups = $derived(groupSharedByBodyRegion(discoverFiltered));
+
+    // ---- handlers ----
     function onRegionChange(e: Event): void {
         const val = (e.target as HTMLSelectElement).value;
         selectedRegion = val ? (val as BR) : null;
@@ -60,6 +74,11 @@
         selectedCategory = null;
     }
 
+    function onDiscoverRegionChange(e: Event): void {
+        const val = (e.target as HTMLSelectElement).value;
+        discoverRegion = val ? (val as BR) : null;
+    }
+
     const hasFilters = $derived(
         searchQuery.trim() !== '' ||
             selectedRegion !== null ||
@@ -73,51 +92,167 @@
 </svelte:head>
 
 <PageShell title="Words">
-    <section class="filters" aria-label="Vocabulary filters">
-        <div class="filter-group">
-            <label class="filter-label" for="vocab-search">Search</label>
-            <input
-                id="vocab-search"
-                class="search-input"
-                type="search"
-                placeholder="Search words or emotions…"
-                bind:value={searchQuery}
-                aria-label="Search vocabulary"
-            />
-        </div>
+    <!-- Tab switcher -->
+    <div class="tab-row" role="tablist" aria-label="Vocabulary views">
+        <button
+            class="tab-btn"
+            class:active={viewMode === 'my-words'}
+            role="tab"
+            aria-selected={viewMode === 'my-words'}
+            onclick={() => (viewMode = 'my-words')}
+        >
+            My Words
+        </button>
+        <button
+            class="tab-btn"
+            class:active={viewMode === 'discover'}
+            role="tab"
+            aria-selected={viewMode === 'discover'}
+            onclick={() => (viewMode = 'discover')}
+        >
+            Discover
+        </button>
+    </div>
 
-        <div class="filter-group">
-            <span class="filter-label" id="cat-label">Category</span>
-            <div class="chips" role="group" aria-labelledby="cat-label">
-                <button
-                    class="chip"
-                    class:active={selectedCategory === null}
-                    aria-pressed={selectedCategory === null}
-                    onclick={() => (selectedCategory = null)}
-                >
-                    All
-                </button>
-                {#each categories as cat (cat)}
+    {#if viewMode === 'my-words'}
+        <!-- Personal vocabulary filters -->
+        <section class="filters" aria-label="Vocabulary filters">
+            <div class="filter-group">
+                <label class="filter-label" for="vocab-search">Search</label>
+                <input
+                    id="vocab-search"
+                    class="search-input"
+                    type="search"
+                    placeholder="Search words or emotions…"
+                    bind:value={searchQuery}
+                    aria-label="Search vocabulary"
+                />
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label" id="cat-label">Category</span>
+                <div class="chips" role="group" aria-labelledby="cat-label">
                     <button
                         class="chip"
-                        class:active={selectedCategory === cat}
-                        aria-pressed={selectedCategory === cat}
-                        onclick={() => toggleCategory(cat)}
+                        class:active={selectedCategory === null}
+                        aria-pressed={selectedCategory === null}
+                        onclick={() => (selectedCategory = null)}
                     >
-                        {formatLabel(cat)}
+                        All
                     </button>
-                {/each}
+                    {#each categories as cat (cat)}
+                        <button
+                            class="chip"
+                            class:active={selectedCategory === cat}
+                            aria-pressed={selectedCategory === cat}
+                            onclick={() => toggleCategory(cat)}
+                        >
+                            {formatLabel(cat)}
+                        </button>
+                    {/each}
+                </div>
             </div>
-        </div>
 
-        <div class="filter-row">
+            <div class="filter-row">
+                <div class="filter-group filter-group--select">
+                    <label class="filter-label" for="region-select">Region</label>
+                    <select
+                        id="region-select"
+                        class="select"
+                        value={selectedRegion ?? ''}
+                        onchange={onRegionChange}
+                    >
+                        <option value="">All regions</option>
+                        {#each regions as region (region)}
+                            <option value={region}>{formatLabel(region)}</option>
+                        {/each}
+                    </select>
+                </div>
+
+                <div class="filter-group filter-group--select">
+                    <label class="filter-label" for="signal-select">Signal type</label>
+                    <select
+                        id="signal-select"
+                        class="select"
+                        value={selectedSignal ?? ''}
+                        onchange={onSignalChange}
+                    >
+                        <option value="">All signals</option>
+                        {#each signals as signal (signal)}
+                            <option value={signal}>{formatLabel(signal)}</option>
+                        {/each}
+                    </select>
+                </div>
+            </div>
+
+            {#if hasFilters}
+                <button class="clear-btn" onclick={clearFilters} aria-label="Clear all filters">
+                    Clear filters
+                </button>
+            {/if}
+        </section>
+
+        <p class="results-count">
+            {filtered.length}
+            {filtered.length === 1 ? 'word' : 'words'}
+        </p>
+
+        {#if $vocabularyStore.length === 0}
+            <div class="empty-state" role="status">
+                <p class="empty-title">No words yet</p>
+                <p class="empty-hint">
+                    Describe sensations during exercises to build your personal vocabulary.
+                </p>
+            </div>
+        {:else if groups.length === 0}
+            <p class="no-results">No words match your filters. Try removing some filters.</p>
+        {:else}
+            <ul class="region-groups" aria-label="Vocabulary grouped by body region">
+                {#each groups as group (group.region)}
+                    <li class="region-group">
+                        <h2 class="region-heading">{formatLabel(group.region)}</h2>
+                        <ul
+                            class="description-list"
+                            aria-label="{formatLabel(group.region)} descriptions"
+                        >
+                            {#each group.items as item (item.id)}
+                                <li class="description-item">
+                                    <span class="description-text">{item.text}</span>
+                                    <div class="description-meta">
+                                        <span class="badge badge-category"
+                                            >{formatLabel(item.category)}</span
+                                        >
+                                        {#if item.signalType}
+                                            <span class="badge badge-signal"
+                                                >{formatLabel(item.signalType)}</span
+                                            >
+                                        {/if}
+                                        {#if item.emotionConnection}
+                                            <span class="badge badge-emotion"
+                                                >{item.emotionConnection}</span
+                                            >
+                                        {/if}
+                                        <span class="description-date"
+                                            >{formatDate(item.createdAt)}</span
+                                        >
+                                    </div>
+                                </li>
+                            {/each}
+                        </ul>
+                    </li>
+                {/each}
+            </ul>
+        {/if}
+    {:else}
+        <!-- Discover: shared vocabulary by body region, sorted by confirmation count -->
+        <section class="filters" aria-label="Discover filters">
             <div class="filter-group filter-group--select">
-                <label class="filter-label" for="region-select">Region</label>
+                <label class="filter-label" for="discover-region-select">Body region</label>
                 <select
-                    id="region-select"
+                    id="discover-region-select"
                     class="select"
-                    value={selectedRegion ?? ''}
-                    onchange={onRegionChange}
+                    value={discoverRegion ?? ''}
+                    onchange={onDiscoverRegionChange}
                 >
                     <option value="">All regions</option>
                     {#each regions as region (region)}
@@ -125,84 +260,102 @@
                     {/each}
                 </select>
             </div>
+        </section>
 
-            <div class="filter-group filter-group--select">
-                <label class="filter-label" for="signal-select">Signal type</label>
-                <select
-                    id="signal-select"
-                    class="select"
-                    value={selectedSignal ?? ''}
-                    onchange={onSignalChange}
-                >
-                    <option value="">All signals</option>
-                    {#each signals as signal (signal)}
-                        <option value={signal}>{formatLabel(signal)}</option>
-                    {/each}
-                </select>
+        <p class="results-count">
+            {discoverFiltered.length}
+            {discoverFiltered.length === 1 ? 'shared term' : 'shared terms'}
+        </p>
+
+        {#if discoverGroups.length === 0}
+            <div class="empty-state" role="status">
+                <p class="empty-title">Nothing to discover yet</p>
+                <p class="empty-hint">Shared vocabulary from the community will appear here.</p>
             </div>
-        </div>
-
-        {#if hasFilters}
-            <button class="clear-btn" onclick={clearFilters} aria-label="Clear all filters">
-                Clear filters
-            </button>
+        {:else}
+            <ul class="region-groups" aria-label="Shared vocabulary grouped by body region">
+                {#each discoverGroups as group (group.region)}
+                    <li class="region-group">
+                        <h2 class="region-heading">{formatLabel(group.region)}</h2>
+                        <ul
+                            class="description-list"
+                            aria-label="Shared {formatLabel(group.region)} descriptions"
+                        >
+                            {#each group.items as item (item.id)}
+                                <li class="description-item">
+                                    <span class="description-text">{item.text}</span>
+                                    <div class="description-meta">
+                                        <span class="badge badge-category"
+                                            >{formatLabel(item.category)}</span
+                                        >
+                                        {#if item.signalType}
+                                            <span class="badge badge-signal"
+                                                >{formatLabel(item.signalType)}</span
+                                            >
+                                        {/if}
+                                        {#if item.emotionConnection}
+                                            <span class="badge badge-emotion"
+                                                >{item.emotionConnection}</span
+                                            >
+                                        {/if}
+                                        <span
+                                            class="confirmation-count"
+                                            aria-label="{item.confirmationCount} confirmations"
+                                        >
+                                            ✓ {item.confirmationCount}
+                                        </span>
+                                    </div>
+                                </li>
+                            {/each}
+                        </ul>
+                    </li>
+                {/each}
+            </ul>
         {/if}
-    </section>
-
-    <p class="results-count">
-        {filtered.length}
-        {filtered.length === 1 ? 'word' : 'words'}
-    </p>
-
-    {#if $vocabularyStore.length === 0}
-        <div class="empty-state" role="status">
-            <p class="empty-title">No words yet</p>
-            <p class="empty-hint">
-                Describe sensations during exercises to build your personal vocabulary.
-            </p>
-        </div>
-    {:else if groups.length === 0}
-        <p class="no-results">No words match your filters. Try removing some filters.</p>
-    {:else}
-        <ul class="region-groups" aria-label="Vocabulary grouped by body region">
-            {#each groups as group (group.region)}
-                <li class="region-group">
-                    <h2 class="region-heading">{formatLabel(group.region)}</h2>
-                    <ul
-                        class="description-list"
-                        aria-label="{formatLabel(group.region)} descriptions"
-                    >
-                        {#each group.items as item (item.id)}
-                            <li class="description-item">
-                                <span class="description-text">{item.text}</span>
-                                <div class="description-meta">
-                                    <span class="badge badge-category"
-                                        >{formatLabel(item.category)}</span
-                                    >
-                                    {#if item.signalType}
-                                        <span class="badge badge-signal"
-                                            >{formatLabel(item.signalType)}</span
-                                        >
-                                    {/if}
-                                    {#if item.emotionConnection}
-                                        <span class="badge badge-emotion"
-                                            >{item.emotionConnection}</span
-                                        >
-                                    {/if}
-                                    <span class="description-date"
-                                        >{formatDate(item.createdAt)}</span
-                                    >
-                                </div>
-                            </li>
-                        {/each}
-                    </ul>
-                </li>
-            {/each}
-        </ul>
     {/if}
 </PageShell>
 
 <style>
+    .tab-row {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+        background: #f3f4f6;
+        border-radius: 0.75rem;
+        padding: 0.25rem;
+    }
+
+    .tab-btn {
+        flex: 1;
+        height: 44px;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: transparent;
+        color: #6b7280;
+        transition:
+            background-color 0.12s,
+            color 0.12s;
+    }
+
+    .tab-btn:hover:not(.active) {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .tab-btn:focus-visible {
+        outline: 3px solid #4f46e5;
+        outline-offset: 2px;
+    }
+
+    .tab-btn.active {
+        background: #ffffff;
+        color: #111827;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
     .filters {
         display: flex;
         flex-direction: column;
@@ -454,6 +607,13 @@
     .description-date {
         font-size: 0.6875rem;
         color: #9ca3af;
+        margin-left: auto;
+    }
+
+    .confirmation-count {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: #059669;
         margin-left: auto;
     }
 </style>

@@ -3,7 +3,12 @@
  */
 
 import { writable } from 'svelte/store';
-import type { UserProfile, SensationDescription, ExerciseSession } from '$lib/types/domain';
+import type {
+    UserProfile,
+    SensationDescription,
+    ExerciseSession,
+    SharedDescription,
+} from '$lib/types/domain';
 import type { SyncStatus } from '$lib/types/sync';
 import {
     getSettings,
@@ -13,7 +18,10 @@ import {
     deleteDescription,
     getAllSessions,
     putSession,
+    getAllSharedDescriptions,
+    putSharedDescription,
 } from '$lib/db';
+import { initSeedVocabulary } from '$lib/core/vocabulary';
 
 // =============================================================================
 // userProfile
@@ -167,3 +175,43 @@ function createSyncStatusStore() {
 }
 
 export const syncStatus = createSyncStatusStore();
+
+// =============================================================================
+// sharedVocabularyStore
+// =============================================================================
+
+function applySharedUpsert(
+    items: SharedDescription[],
+    description: SharedDescription
+): SharedDescription[] {
+    const idx = items.findIndex(d => d.id === description.id);
+    if (idx >= 0) {
+        const next = [...items];
+        next[idx] = description;
+        return next;
+    }
+    return [...items, description];
+}
+
+function createSharedVocabularyStore() {
+    const { subscribe, set, update } = writable<SharedDescription[]>([]);
+
+    async function init(): Promise<void> {
+        await initSeedVocabulary();
+        const descriptions = await getAllSharedDescriptions();
+        set(descriptions);
+    }
+
+    async function upsert(description: SharedDescription): Promise<void> {
+        await putSharedDescription(description);
+        update(d => applySharedUpsert(d, description));
+    }
+
+    function reset(): void {
+        set([]);
+    }
+
+    return { subscribe, init, upsert, reset };
+}
+
+export const sharedVocabularyStore = createSharedVocabularyStore();
