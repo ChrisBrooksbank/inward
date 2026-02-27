@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { groupSharedByBodyRegion, filterSharedByRegion } from './sharedVocabulary';
+import {
+    groupSharedByBodyRegion,
+    filterSharedByRegion,
+    computeConfirmationStatus,
+} from './sharedVocabulary';
 import type { SharedDescription } from '$lib/types/domain';
 
 function makeShared(
@@ -69,6 +73,28 @@ describe('groupSharedByBodyRegion', () => {
         const groups = groupSharedByBodyRegion(items);
         expect(groups).toHaveLength(1);
         expect(groups[0].region).toBe('jaw');
+    });
+});
+
+describe('computeConfirmationStatus', () => {
+    it('returns unconfirmed for 0', () => {
+        expect(computeConfirmationStatus(0)).toBe('unconfirmed');
+    });
+
+    it('returns confirmed for 1', () => {
+        expect(computeConfirmationStatus(1)).toBe('confirmed');
+    });
+
+    it('returns confirmed for 4', () => {
+        expect(computeConfirmationStatus(4)).toBe('confirmed');
+    });
+
+    it('returns popular for 5', () => {
+        expect(computeConfirmationStatus(5)).toBe('popular');
+    });
+
+    it('returns popular for values above 5', () => {
+        expect(computeConfirmationStatus(10)).toBe('popular');
     });
 });
 

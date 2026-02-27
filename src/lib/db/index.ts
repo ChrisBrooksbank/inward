@@ -227,6 +227,11 @@ export async function getConfirmation(id: string): Promise<VocabularyConfirmatio
     return db.get('confirmations', id);
 }
 
+export async function getAllConfirmations(): Promise<VocabularyConfirmation[]> {
+    const db = await getDb();
+    return db.getAll('confirmations');
+}
+
 export async function getConfirmationsByDescription(
     sharedDescriptionId: string
 ): Promise<VocabularyConfirmation[]> {

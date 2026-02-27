@@ -20,8 +20,12 @@ import {
     putSession,
     getAllSharedDescriptions,
     putSharedDescription,
+    putConfirmation,
+    getAllConfirmations,
 } from '$lib/db';
 import { initSeedVocabulary } from '$lib/core/vocabulary';
+import { computeConfirmationStatus } from '$lib/core/sharedVocabulary';
+import type { VocabularyConfirmation } from '$lib/types/domain';
 
 // =============================================================================
 // userProfile
@@ -193,6 +197,9 @@ function applySharedUpsert(
     return [...items, description];
 }
 
+// Tracks which shared description IDs the local user has confirmed.
+export const confirmedDescriptionIds = writable<string[]>([]);
+
 function createSharedVocabularyStore() {
     const { subscribe, set, update } = writable<SharedDescription[]>([]);
 
@@ -200,6 +207,8 @@ function createSharedVocabularyStore() {
         await initSeedVocabulary();
         const descriptions = await getAllSharedDescriptions();
         set(descriptions);
+        const confirmations = await getAllConfirmations();
+        confirmedDescriptionIds.set(confirmations.map(c => c.sharedDescriptionId));
     }
 
     async function upsert(description: SharedDescription): Promise<void> {
@@ -207,11 +216,39 @@ function createSharedVocabularyStore() {
         update(d => applySharedUpsert(d, description));
     }
 
-    function reset(): void {
-        set([]);
+    async function confirm(sharedDescriptionId: string, userId: string): Promise<void> {
+        let target: SharedDescription | undefined;
+        update(items => {
+            target = items.find(d => d.id === sharedDescriptionId);
+            return items;
+        });
+        if (!target) return;
+
+        const newCount = target.confirmationCount + 1;
+        const updated: SharedDescription = {
+            ...target,
+            confirmationCount: newCount,
+            confirmationStatus: computeConfirmationStatus(newCount),
+            lastConfirmedAt: new Date(),
+        };
+        const confirmation: VocabularyConfirmation = {
+            id: crypto.randomUUID(),
+            sharedDescriptionId,
+            userId,
+            confirmedAt: new Date(),
+        };
+        await putConfirmation(confirmation);
+        await putSharedDescription(updated);
+        confirmedDescriptionIds.update(ids => [...ids, sharedDescriptionId]);
+        update(items => applySharedUpsert(items, updated));
     }
 
-    return { subscribe, init, upsert, reset };
+    function reset(): void {
+        set([]);
+        confirmedDescriptionIds.set([]);
+    }
+
+    return { subscribe, init, upsert, confirm, reset };
 }
 
 export const sharedVocabularyStore = createSharedVocabularyStore();

@@ -1,7 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { PageShell } from '$lib/components';
-    import { vocabularyStore, sharedVocabularyStore } from '$lib/stores';
+    import {
+        vocabularyStore,
+        sharedVocabularyStore,
+        confirmedDescriptionIds,
+        userProfile,
+    } from '$lib/stores';
     import {
         groupByBodyRegion,
         formatLabel,
@@ -77,6 +82,11 @@
     function onDiscoverRegionChange(e: Event): void {
         const val = (e.target as HTMLSelectElement).value;
         discoverRegion = val ? (val as BR) : null;
+    }
+
+    async function handleConfirm(sharedDescriptionId: string): Promise<void> {
+        const uid = $userProfile?.id ?? '00000000-0000-0000-0000-000000000001';
+        await sharedVocabularyStore.confirm(sharedDescriptionId, uid);
     }
 
     const hasFilters = $derived(
@@ -282,6 +292,9 @@
                             aria-label="Shared {formatLabel(group.region)} descriptions"
                         >
                             {#each group.items as item (item.id)}
+                                {@const alreadyConfirmed = $confirmedDescriptionIds.includes(
+                                    item.id
+                                )}
                                 <li class="description-item">
                                     <span class="description-text">{item.text}</span>
                                     <div class="description-meta">
@@ -305,6 +318,19 @@
                                             ✓ {item.confirmationCount}
                                         </span>
                                     </div>
+                                    <button
+                                        class="confirm-btn"
+                                        class:confirm-btn--done={alreadyConfirmed}
+                                        disabled={alreadyConfirmed}
+                                        aria-label={alreadyConfirmed
+                                            ? 'You already confirmed this'
+                                            : 'Yes, I feel this too'}
+                                        onclick={() => void handleConfirm(item.id)}
+                                    >
+                                        {alreadyConfirmed
+                                            ? 'You feel this ✓'
+                                            : 'Yes, I feel this too'}
+                                    </button>
                                 </li>
                             {/each}
                         </ul>
@@ -615,5 +641,37 @@
         font-weight: 600;
         color: #059669;
         margin-left: auto;
+    }
+
+    .confirm-btn {
+        align-self: flex-start;
+        min-height: 44px;
+        padding: 0.375rem 1rem;
+        border: 1.5px solid #4f46e5;
+        border-radius: 9999px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #4f46e5;
+        background: #ffffff;
+        cursor: pointer;
+        transition:
+            background-color 0.12s,
+            color 0.12s;
+    }
+
+    .confirm-btn:hover:not(:disabled) {
+        background: #eef2ff;
+    }
+
+    .confirm-btn:focus-visible {
+        outline: 3px solid #4f46e5;
+        outline-offset: 2px;
+    }
+
+    .confirm-btn--done {
+        border-color: #059669;
+        color: #059669;
+        cursor: default;
+        opacity: 0.75;
     }
 </style>

@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { get } from 'svelte/store';
-import { userProfile, exerciseState, vocabularyStore, syncStatus } from './index';
+import {
+    userProfile,
+    exerciseState,
+    vocabularyStore,
+    syncStatus,
+    sharedVocabularyStore,
+    confirmedDescriptionIds,
+} from './index';
 import {
     DB_NAME,
     resetDb,
@@ -8,8 +15,16 @@ import {
     putSession,
     putDescription,
     getAllDescriptions,
+    putSharedDescription,
+    getConfirmationsByDescription,
+    getSharedDescription,
 } from '$lib/db';
-import type { UserProfile, ExerciseSession, SensationDescription } from '$lib/types/domain';
+import type {
+    UserProfile,
+    ExerciseSession,
+    SensationDescription,
+    SharedDescription,
+} from '$lib/types/domain';
 
 async function deleteTestDb(): Promise<void> {
     return new Promise<void>(resolve => {
@@ -27,6 +42,7 @@ beforeEach(async () => {
     exerciseState.reset();
     vocabularyStore.reset();
     syncStatus.reset();
+    sharedVocabularyStore.reset();
 });
 
 // =============================================================================
@@ -38,6 +54,19 @@ const sessionId = '550e8400-e29b-41d4-a716-446655440012';
 const exerciseId = '550e8400-e29b-41d4-a716-446655440013';
 const descriptionId = '550e8400-e29b-41d4-a716-446655440014';
 const description2Id = '550e8400-e29b-41d4-a716-446655440015';
+const sharedId = '550e8400-e29b-41d4-a716-446655440016';
+const userId = '550e8400-e29b-41d4-a716-446655440017';
+
+const testShared: SharedDescription = {
+    id: sharedId,
+    text: 'pounding heartbeat',
+    category: 'physical',
+    bodyRegion: 'heart',
+    sharingLevel: 'anonymous',
+    confirmationCount: 0,
+    confirmationStatus: 'unconfirmed',
+    sharedAt: new Date('2026-01-01T00:00:00Z'),
+};
 
 const testProfile: UserProfile = {
     id: profileId,
@@ -263,5 +292,84 @@ describe('syncStatus', () => {
         expect(status.isSyncing).toBe(false);
         expect(status.pendingOperations).toBe(0);
         expect(status.failedOperations).toBe(0);
+    });
+});
+
+// =============================================================================
+// sharedVocabularyStore — confirm
+// =============================================================================
+
+describe('sharedVocabularyStore confirm', () => {
+    it('increments confirmationCount in the store', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        const items = get(sharedVocabularyStore);
+        expect(items.find(i => i.id === sharedId)?.confirmationCount).toBe(1);
+    });
+
+    it('sets confirmationStatus to confirmed after first confirmation', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        const items = get(sharedVocabularyStore);
+        expect(items.find(i => i.id === sharedId)?.confirmationStatus).toBe('confirmed');
+    });
+
+    it('sets confirmationStatus to popular at 5 confirmations', async () => {
+        const nearPopular: SharedDescription = {
+            ...testShared,
+            confirmationCount: 4,
+            confirmationStatus: 'confirmed',
+        };
+        await putSharedDescription(nearPopular);
+        await sharedVocabularyStore.init();
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        const items = get(sharedVocabularyStore);
+        expect(items.find(i => i.id === sharedId)?.confirmationStatus).toBe('popular');
+    });
+
+    it('saves a VocabularyConfirmation record to IndexedDB', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        const confirmations = await getConfirmationsByDescription(sharedId);
+        expect(confirmations).toHaveLength(1);
+        expect(confirmations[0].sharedDescriptionId).toBe(sharedId);
+        expect(confirmations[0].userId).toBe(userId);
+    });
+
+    it('persists updated confirmationCount to IndexedDB', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        const stored = await getSharedDescription(sharedId);
+        expect(stored?.confirmationCount).toBe(1);
+    });
+
+    it('adds sharedDescriptionId to confirmedDescriptionIds store', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        expect(get(confirmedDescriptionIds)).toContain(sharedId);
+    });
+
+    it('does nothing when description id is not found', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        const lengthBefore = get(sharedVocabularyStore).length;
+        await sharedVocabularyStore.confirm('00000000-0000-0000-0000-000000000000', userId);
+        expect(get(sharedVocabularyStore)).toHaveLength(lengthBefore);
+        expect(get(confirmedDescriptionIds)).toHaveLength(0);
+    });
+
+    it('restores confirmedDescriptionIds from DB on init', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        // Reset and re-init
+        sharedVocabularyStore.reset();
+        await sharedVocabularyStore.init();
+        expect(get(confirmedDescriptionIds)).toContain(sharedId);
     });
 });

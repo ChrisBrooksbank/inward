@@ -4,7 +4,17 @@
  */
 
 import { BodyRegion } from '$lib/types/domain';
-import type { SharedDescription, BodyRegion as BR } from '$lib/types/domain';
+import type { SharedDescription, BodyRegion as BR, ConfirmationStatus } from '$lib/types/domain';
+
+/**
+ * Derives the confirmation status from a raw count.
+ * popular: 5+ confirmations, confirmed: 1–4, unconfirmed: 0.
+ */
+export function computeConfirmationStatus(count: number): ConfirmationStatus {
+    if (count >= 5) return 'popular';
+    if (count >= 1) return 'confirmed';
+    return 'unconfirmed';
+}
 
 export interface SharedVocabularyGroup {
     region: BR;
