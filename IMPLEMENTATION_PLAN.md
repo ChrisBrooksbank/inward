@@ -83,7 +83,7 @@
 - [x] Add MAIA-2 radar chart to Progress tab with before/after overlay comparison when multiple assessments exist (reuse component from onboarding) (spec: 05-progress.md)
 - [x] Build insights engine: 5 insight types with 8 generation rules, max 3 shown at once (spec: 05-progress.md)
 - [x] Build sessions-per-week and vocabulary-growth-over-time charts (spec: 05-progress.md)
-- [ ] Implement data export (full JSON) and delete-all-data with confirmation dialog (spec: 05-progress.md)
+- [x] Implement data export (full JSON) and delete-all-data with confirmation dialog (spec: 05-progress.md)
 
 ### Phase 6: Sync
 

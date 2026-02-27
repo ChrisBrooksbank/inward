@@ -9,6 +9,7 @@
         MAIAProgressSection,
         InsightCard,
         TrendsCharts,
+        DataManagement,
     } from '$lib/components';
     import { calculateQuickStats } from '$lib/components/progress/quick-stats';
     import type { QuickStatsData } from '$lib/components/progress/quick-stats';
@@ -79,6 +80,12 @@
                 </div>
             </section>
         {/if}
+        <DataManagement
+            sessionCount={stats.totalSessions}
+            vocabularyCount={stats.uniqueWords}
+            assessmentCount={assessments.length}
+            onDeleted={() => window.location.reload()}
+        />
     {/if}
 </PageShell>
 
