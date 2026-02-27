@@ -1,9 +1,11 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { PageShell, QuickStats, StreakCalendar } from '$lib/components';
+    import type { BodyRegion } from '$lib/types/domain';
+    import { PageShell, QuickStats, StreakCalendar, BodyCoverage } from '$lib/components';
     import { calculateQuickStats } from '$lib/components/progress/quick-stats';
     import type { QuickStatsData } from '$lib/components/progress/quick-stats';
     import { buildPracticeMap } from '$lib/components/progress/streak-calendar';
+    import { buildRegionCoverage } from '$lib/components/progress/body-coverage';
     import { getAllSessions, getAllDescriptions } from '$lib/db';
 
     let stats = $state<QuickStatsData>({
@@ -13,6 +15,7 @@
         regionsExplored: 0,
     });
     let practiceData = $state<Map<string, number>>(new Map());
+    let regionCoverage = $state<Map<BodyRegion, number>>(new Map());
     let loading = $state(true);
 
     onMount(async () => {
@@ -22,6 +25,7 @@
         ]);
         stats = calculateQuickStats(sessions, descriptions);
         practiceData = buildPracticeMap(sessions);
+        regionCoverage = buildRegionCoverage(sessions, descriptions);
         loading = false;
     });
 </script>
@@ -36,6 +40,7 @@
     {:else}
         <QuickStats {stats} />
         <StreakCalendar {practiceData} currentStreak={stats.streakDays} />
+        <BodyCoverage practicedRegions={regionCoverage} />
     {/if}
 </PageShell>
 
