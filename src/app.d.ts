@@ -8,6 +8,16 @@ declare global {
         // interface PageState {}
         // interface Platform {}
     }
+
+    interface BeforeInstallPromptEvent extends Event {
+        readonly platforms: string[];
+        prompt(): Promise<{ outcome: 'accepted' | 'dismissed' }>;
+    }
+
+    interface WindowEventMap {
+        beforeinstallprompt: BeforeInstallPromptEvent;
+        appinstalled: Event;
+    }
 }
 
 export {};
