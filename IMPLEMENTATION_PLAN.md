@@ -45,7 +45,7 @@
 ### Phase 2: Onboarding
 
 - [x] Build onboarding shell: step progress indicator (e.g. "Step 2 of 6"), skip button on every step, and persist current step index to IndexedDB so the flow resumes on page refresh (spec: 02-onboarding.md)
-- [ ] Build onboarding steps 1–3: Welcome, What is Interoception, Privacy & Data screens (spec: 02-onboarding.md)
+- [x] Build onboarding steps 1–3: Welcome, What is Interoception, Privacy & Data screens (spec: 02-onboarding.md)
 - [ ] Build MAIA-2 scoring logic: 37 items, 6-point Likert scale, 8 subscale score calculation (Noticing, Not-Distracting, Not-Worrying, Attention Regulation, Emotional Awareness, Self-Regulation, Body Listening, Trusting) with unit tests (spec: 02-onboarding.md)
 - [ ] Build MAIA-2 questionnaire UI component (step 4, optional/skippable): render items grouped by subscale, collect responses, call scoring logic, save result to IndexedDB (spec: 02-onboarding.md)
 - [ ] Build onboarding steps 5–6: First Exercise intro and Completion screens; save onboarding-complete flag to IndexedDB (spec: 02-onboarding.md)

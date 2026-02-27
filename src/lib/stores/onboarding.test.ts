@@ -114,4 +114,30 @@ describe('onboardingStep store', () => {
         const profile = await getSettings();
         expect(profile?.onboardingStep).toBe(2);
     });
+
+    it('back decrements step by 1 and persists to DB', async () => {
+        await putSettings(testProfile);
+        await onboardingStep.init();
+        await onboardingStep.back();
+        expect(get(onboardingStep)).toBe(1);
+        const profile = await getSettings();
+        expect(profile?.onboardingStep).toBe(1);
+    });
+
+    it('back does not go below 0', async () => {
+        await putSettings({ ...testProfile, onboardingStep: 0 });
+        await onboardingStep.init();
+        await onboardingStep.back();
+        expect(get(onboardingStep)).toBe(0);
+        const profile = await getSettings();
+        expect(profile?.onboardingStep).toBe(0);
+    });
+
+    it('back creates a default profile when none exists', async () => {
+        await onboardingStep.back();
+        expect(get(onboardingStep)).toBe(0);
+        const profile = await getSettings();
+        expect(profile).toBeDefined();
+        expect(profile?.onboardingStep).toBe(0);
+    });
 });

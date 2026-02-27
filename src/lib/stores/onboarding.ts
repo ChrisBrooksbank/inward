@@ -61,11 +61,18 @@ function createOnboardingStore() {
         set(TOTAL_STEPS);
     }
 
+    async function back(): Promise<void> {
+        const profile = await loadOrCreateProfile();
+        const prev = Math.max(profile.onboardingStep - 1, 0);
+        await putSettings({ ...profile, onboardingStep: prev, updatedAt: new Date() });
+        set(prev);
+    }
+
     function reset(): void {
         set(0);
     }
 
-    return { subscribe, init, advance, skip, reset };
+    return { subscribe, init, advance, back, skip, reset };
 }
 
 export const onboardingStep = createOnboardingStore();
