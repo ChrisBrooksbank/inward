@@ -38,7 +38,7 @@
 - [x] Create Svelte stores: userProfile, exerciseState, vocabularyStore, syncStatus — wired to IndexedDB (spec: 01-foundation.md)
 - [x] Create base UI components: Button and Card (spec: 01-foundation.md)
 - [x] Create BottomNav component with 4 tabs: Dashboard, Practice, Words, Progress (spec: 01-foundation.md)
-- [ ] Create PageShell component and integrate BottomNav into root layout (spec: 01-foundation.md)
+- [x] Create PageShell component and integrate BottomNav into root layout (spec: 01-foundation.md)
 - [ ] Create SvelteKit route groups and stubs: `(app)/` dashboard, `(app)/practice`, `(app)/words`, `(app)/progress`, `(onboarding)/onboarding`, `(exercise)/exercise/[id]` — navigation hidden in `(exercise)` group layout (spec: 01-foundation.md)
 - [ ] Add reduced-motion CSS support, 44×44px touch target enforcement, and visible focus indicators to global styles (spec: 01-foundation.md)
 
