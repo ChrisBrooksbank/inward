@@ -1,10 +1,19 @@
+<script lang="ts">
+    import { onboardingStep, TOTAL_STEPS } from '$lib/stores/onboarding';
+</script>
+
 <svelte:head>
     <title>Welcome – Inward</title>
 </svelte:head>
 
 <div class="onboarding-page">
-    <h1>Welcome to Inward</h1>
-    <p>Your interoception training journey starts here.</p>
+    {#if $onboardingStep < TOTAL_STEPS}
+        <h1>Welcome to Inward</h1>
+        <p>Your interoception training journey starts here.</p>
+    {:else}
+        <h1>Setup Complete</h1>
+        <p>You're ready to start your practice.</p>
+    {/if}
 </div>
 
 <style>
