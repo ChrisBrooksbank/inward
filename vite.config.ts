@@ -8,7 +8,10 @@ export default defineConfig({
         SvelteKitPWA({
             registerType: 'prompt',
             workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
+                globPatterns: ['client/**/*.{js,css,ico,png,svg,woff2,webp}'],
+                additionalManifestEntries: [{ url: 'index.html', revision: Date.now().toString() }],
+                navigateFallback: 'index.html',
+                navigateFallbackAllowlist: [/^\/[^.]*$/],
             },
             manifest: {
                 name: 'Inward - Interoception Training',
