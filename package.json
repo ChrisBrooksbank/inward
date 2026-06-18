@@ -1,6 +1,7 @@
 {
     "name": "inward",
     "version": "0.0.1",
+    "license": "MIT",
     "description": "A peer-to-peer PWA for interoception training - helping people recognize and describe internal body sensations",
     "type": "module",
     "scripts": {
