@@ -91,6 +91,14 @@ describe('buildSessionsPerWeek', () => {
         expect(result).toHaveLength(8);
     });
 
+    it('keeps every week start on a Monday across daylight-saving changes', () => {
+        // Window spans the spring clock change in Europe and North America
+        const result = buildSessionsPerWeek([], 8, new Date('2026-04-15T12:00:00'));
+        for (const week of result) {
+            expect(new Date(week.weekStart + 'T12:00:00').getDay()).toBe(1);
+        }
+    });
+
     it('returns all zeros for no sessions', () => {
         const result = buildSessionsPerWeek([], 4, today);
         expect(result.every(p => p.count === 0)).toBe(true);

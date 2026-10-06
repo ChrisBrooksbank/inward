@@ -45,7 +45,10 @@ export function toDateStr(d: Date): string {
 function buildWeekStarts(thisMonday: Date, weeksBack: number): Date[] {
     const weeks: Date[] = [];
     for (let i = weeksBack - 1; i >= 0; i--) {
-        weeks.push(new Date(thisMonday.getTime() - i * 7 * 24 * 60 * 60 * 1000));
+        // Step by calendar days, not fixed milliseconds, so DST changes don't shift the date
+        weeks.push(
+            new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMonday.getDate() - i * 7)
+        );
     }
     return weeks;
 }

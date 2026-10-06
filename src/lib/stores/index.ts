@@ -2,7 +2,7 @@
  * Svelte stores for global app state, wired to IndexedDB.
  */
 
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import type {
     UserProfile,
     SensationDescription,
@@ -229,13 +229,28 @@ function createSharedVocabularyStore() {
         update(d => applySharedUpsert(d, description));
     }
 
+    // Confirmations in flight, so a quick double tap can't count twice
+    const confirming = new Set<string>();
+
+    function canConfirm(sharedDescriptionId: string): boolean {
+        if (confirming.has(sharedDescriptionId)) return false;
+        return !get(confirmedDescriptionIds).includes(sharedDescriptionId);
+    }
+
     async function confirm(sharedDescriptionId: string, userId: string): Promise<void> {
-        let target: SharedDescription | undefined;
-        update(items => {
-            target = items.find(d => d.id === sharedDescriptionId);
-            return items;
-        });
+        if (!canConfirm(sharedDescriptionId)) return;
+        const target = get({ subscribe }).find(d => d.id === sharedDescriptionId);
         if (!target) return;
+        confirming.add(sharedDescriptionId);
+        try {
+            await saveConfirmation(target, userId);
+        } finally {
+            confirming.delete(sharedDescriptionId);
+        }
+    }
+
+    async function saveConfirmation(target: SharedDescription, userId: string): Promise<void> {
+        const sharedDescriptionId = target.id;
 
         const newCount = target.confirmationCount + 1;
         const updated: SharedDescription = {

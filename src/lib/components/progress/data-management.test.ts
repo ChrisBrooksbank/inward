@@ -1,11 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type {
     ExerciseSession,
     SensationDescription,
     MAIAAssessment,
     UserProfile,
 } from '$lib/types/domain';
-import { mapSession, mapVocab, mapAssessment, mapProfile } from './data-management';
+import {
+    mapSession,
+    mapVocab,
+    mapAssessment,
+    mapProfile,
+    deleteAllData,
+    triggerDownload,
+} from './data-management';
+import type { ExportData } from './data-management';
+import { getSyncMeta, putSyncMeta, putSession, getAllSessions, resetDb } from '$lib/db';
 
 // =============================================================================
 // Test helpers
@@ -209,5 +218,53 @@ describe('mapProfile', () => {
     it('omits onboardingCompletedAt when onboarding not complete', () => {
         const profile = makeProfile({ onboardingComplete: false });
         expect(mapProfile(profile).onboardingCompletedAt).toBeUndefined();
+    });
+});
+
+// =============================================================================
+// deleteAllData / triggerDownload
+// =============================================================================
+
+describe('deleteAllData', () => {
+    it('clears sessions and the device sync metadata', async () => {
+        resetDb();
+        await putSession(makeSession({ id: crypto.randomUUID() }));
+        await putSyncMeta({
+            deviceId: crypto.randomUUID(),
+            registeredAt: new Date(),
+            lastSyncAt: new Date(),
+        });
+
+        await deleteAllData();
+
+        expect(await getAllSessions()).toHaveLength(0);
+        expect(await getSyncMeta()).toBeUndefined();
+    });
+});
+
+describe('triggerDownload', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.useRealTimers();
+    });
+
+    it('clicks an attached link and revokes the URL only afterwards', () => {
+        vi.useFakeTimers();
+        URL.createObjectURL = vi.fn(() => 'blob:test');
+        URL.revokeObjectURL = vi.fn();
+        let attachedOnClick = false;
+        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+            this: HTMLAnchorElement
+        ) {
+            attachedOnClick = document.body.contains(this);
+        });
+
+        triggerDownload({} as ExportData);
+
+        expect(attachedOnClick).toBe(true);
+        expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+        vi.runAllTimers();
+        expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test');
+        expect(document.querySelector('a[download]')).toBeNull();
     });
 });
