@@ -57,18 +57,28 @@ function toQueryString(params: Record<string, QueryValue | undefined>): string {
     return pairs.length > 0 ? `?${pairs.join('&')}` : '';
 }
 
+/** Error bodies may be HTML or empty (e.g. a proxy's 502 page), so fall back to raw text. */
+async function readErrorBody(response: Response): Promise<unknown> {
+    const text = await response.text().catch(() => '');
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text;
+    }
+}
+
 async function parseResponse<T>(
     response: Response,
     schema: { parse: (data: unknown) => T }
 ): Promise<T> {
-    const data: unknown = await response.json();
     if (!response.ok) {
         throw new RelayApiError(
             `HTTP ${response.status}: ${response.statusText}`,
             response.status,
-            data
+            await readErrorBody(response)
         );
     }
+    const data: unknown = await response.json();
     return schema.parse(data);
 }
 

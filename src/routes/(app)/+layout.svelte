@@ -5,8 +5,8 @@
     import { BottomNav, SyncStatusIndicator, SyncConsentDialog } from '$lib/components';
     import { getOnboardingRedirect } from '$lib/utils/routeGuard';
     import { initSeedVocabulary } from '$lib/core/vocabulary';
-    import { syncStatus } from '$lib/stores';
-    import { runDeltaSync, startBackgroundSync } from '$lib/core/deltaSync';
+    import { syncStatus, sharedVocabularyStore } from '$lib/stores';
+    import { runDeltaSync, startBackgroundSync, SYNC_INTERVAL_MS } from '$lib/core/deltaSync';
     import { startOnlineListener } from '$lib/core/offlineQueue';
     import { RelayApiClient } from '$lib/core/apiClient';
     import { getSettings, putSettings } from '$lib/db';
@@ -22,11 +22,18 @@
         return new RelayApiClient();
     }
 
+    // Show freshly synced shared vocabulary and the new sync time
+    function onSynced(): void {
+        syncStatus.patch({ lastSyncAt: new Date() });
+        void sharedVocabularyStore.init();
+    }
+
     async function doSync(): Promise<void> {
         syncStatus.patch({ isSyncing: true });
         try {
             await runDeltaSync(getClient());
-            syncStatus.patch({ isSyncing: false, lastSyncAt: new Date() });
+            syncStatus.patch({ isSyncing: false });
+            onSynced();
         } catch {
             syncStatus.patch({ isSyncing: false });
         } finally {
@@ -45,7 +52,7 @@
     }
 
     function startSyncServices(): void {
-        cleanupSync = startBackgroundSync(getClient);
+        cleanupSync = startBackgroundSync(getClient, SYNC_INTERVAL_MS, onSynced);
         cleanupOnline = startOnlineListener(getClient);
     }
 
@@ -67,7 +74,9 @@
     onMount(async () => {
         const redirect = await getOnboardingRedirect();
         if (redirect) {
+            // Don't seed data or start sync for a user who hasn't finished onboarding
             await goto(redirect);
+            return;
         }
         await initSeedVocabulary();
         await syncStatus.init();

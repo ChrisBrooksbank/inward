@@ -16,6 +16,7 @@ function mockFetch(status: number, body: unknown): void {
             status,
             statusText: status === 200 ? 'OK' : 'Error',
             json: () => Promise.resolve(body),
+            text: () => Promise.resolve(JSON.stringify(body)),
         })
     );
 }
@@ -195,7 +196,26 @@ describe('RelayApiClient', () => {
                 const apiErr = err as RelayApiError;
                 expect(apiErr.status).toBe(429);
                 expect(apiErr.name).toBe('RelayApiError');
+                expect(apiErr.body).toEqual({ error: 'rate_limit_exceeded', retryAfter: 30 });
             }
+        });
+
+        it('keeps the status when the error body is not JSON', async () => {
+            vi.stubGlobal(
+                'fetch',
+                vi.fn().mockResolvedValue(
+                    new Response('<html>Bad Gateway</html>', {
+                        status: 502,
+                        statusText: 'Bad Gateway',
+                    })
+                )
+            );
+            const err = await client
+                .getDescription('11111111-1111-1111-1111-111111111111')
+                .catch((e: unknown) => e);
+            expect(err).toBeInstanceOf(RelayApiError);
+            expect((err as RelayApiError).status).toBe(502);
+            expect((err as RelayApiError).body).toBe('<html>Bad Gateway</html>');
         });
     });
 

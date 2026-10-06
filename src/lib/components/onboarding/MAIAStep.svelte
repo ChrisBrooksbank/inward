@@ -37,6 +37,7 @@
 
     const responses = $state<number[]>(Array(37).fill(-1));
     let saving = $state(false);
+    let saveError = $state('');
 
     const answeredCount = $derived(responses.filter(r => r >= 0).length);
     const isComplete = $derived(answeredCount === 37);
@@ -55,6 +56,7 @@
 
     async function handleSave(): Promise<void> {
         saving = true;
+        saveError = '';
         const now = new Date();
         const scores = scoreMaiaAssessment([...responses], now);
         const assessment: MAIAAssessment = {
@@ -63,9 +65,14 @@
             scores,
             completedAt: now,
         };
-        await putAssessment(assessment);
-        await onboardingStep.advance();
-        saving = false;
+        try {
+            await putAssessment(assessment);
+            await onboardingStep.advance();
+        } catch {
+            saveError = 'Could not save your results. Please try again.';
+        } finally {
+            saving = false;
+        }
     }
 </script>
 
@@ -136,6 +143,9 @@
     </form>
 
     <div class="step-actions">
+        {#if saveError}
+            <p class="save-error" role="alert">{saveError}</p>
+        {/if}
         {#if isComplete}
             <Button onclick={handleSave} disabled={saving}>
                 {saving ? 'Saving…' : 'Save Results'}
@@ -146,6 +156,13 @@
 </div>
 
 <style>
+    .save-error {
+        margin: 0;
+        font-size: 0.875rem;
+        color: #b91c1c;
+        text-align: center;
+    }
+
     .step {
         display: flex;
         flex-direction: column;
