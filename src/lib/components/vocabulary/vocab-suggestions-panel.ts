@@ -49,3 +49,36 @@ export function descriptionFromShared(
         sharingLevel: 'private',
     };
 }
+
+/**
+ * Creates personal SensationDescriptions from the free-text descriptions a user
+ * typed during an exercise session, skipping any text they already own
+ * (case-insensitive) or repeated within the session.
+ */
+export function descriptionsFromSession(
+    sessionDescriptions: { text: string; bodyRegion: BodyRegion }[],
+    personal: SensationDescription[],
+    exerciseId: string,
+    sessionId: string
+): SensationDescription[] {
+    const ownedTexts = new Set(personal.map(d => d.text.toLowerCase()));
+    const result: SensationDescription[] = [];
+    for (const { text, bodyRegion } of sessionDescriptions) {
+        const key = text.toLowerCase();
+        if (ownedTexts.has(key)) continue;
+        ownedTexts.add(key);
+        const now = new Date();
+        result.push({
+            id: crypto.randomUUID(),
+            text,
+            category: 'physical',
+            bodyRegion,
+            exerciseId,
+            sessionId,
+            createdAt: now,
+            updatedAt: now,
+            sharingLevel: 'private',
+        });
+    }
+    return result;
+}

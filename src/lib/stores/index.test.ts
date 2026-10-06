@@ -380,6 +380,19 @@ describe('sharedVocabularyStore confirm', () => {
         expect(items.find(i => i.id === sharedId)?.confirmationStatus).toBe('popular');
     });
 
+    it('counts concurrent or repeated confirmations only once', async () => {
+        await putSharedDescription(testShared);
+        await sharedVocabularyStore.init();
+        await Promise.all([
+            sharedVocabularyStore.confirm(sharedId, userId),
+            sharedVocabularyStore.confirm(sharedId, userId),
+        ]);
+        await sharedVocabularyStore.confirm(sharedId, userId);
+        const items = get(sharedVocabularyStore);
+        expect(items.find(i => i.id === sharedId)?.confirmationCount).toBe(1);
+        expect(await getConfirmationsByDescription(sharedId)).toHaveLength(1);
+    });
+
     it('saves a VocabularyConfirmation record to IndexedDB', async () => {
         await putSharedDescription(testShared);
         await sharedVocabularyStore.init();

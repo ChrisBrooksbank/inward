@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
     getContextualSuggestions,
     descriptionFromShared,
+    descriptionsFromSession,
     MAX_SUGGESTIONS,
 } from './vocab-suggestions-panel';
 import type { SharedDescription, SensationDescription } from '$lib/types/domain';
@@ -169,5 +170,47 @@ describe('descriptionFromShared', () => {
         const shared = makeShared();
         const desc = descriptionFromShared(shared, exerciseId, sessionId);
         expect(desc.createdAt.getTime()).toBe(desc.updatedAt.getTime());
+    });
+});
+
+describe('descriptionsFromSession', () => {
+    const EX_ID = '00000000-0000-4000-8000-000000000001';
+    const SESSION_ID = '11111111-1111-4111-8111-111111111111';
+
+    it('creates private personal entries linked to the session', () => {
+        const result = descriptionsFromSession(
+            [{ text: 'warm buzzing', bodyRegion: 'hands' }],
+            [],
+            EX_ID,
+            SESSION_ID
+        );
+        expect(result).toHaveLength(1);
+        expect(result[0]).toMatchObject({
+            text: 'warm buzzing',
+            bodyRegion: 'hands',
+            exerciseId: EX_ID,
+            sessionId: SESSION_ID,
+            sharingLevel: 'private',
+        });
+    });
+
+    it('skips text already owned or repeated, case-insensitively', () => {
+        const owned = descriptionsFromSession(
+            [{ text: 'Tight', bodyRegion: 'chest' }],
+            [],
+            EX_ID,
+            SESSION_ID
+        );
+        const result = descriptionsFromSession(
+            [
+                { text: 'tight', bodyRegion: 'chest' },
+                { text: 'fizzy', bodyRegion: 'stomach' },
+                { text: 'FIZZY', bodyRegion: 'stomach' },
+            ],
+            owned,
+            EX_ID,
+            SESSION_ID
+        );
+        expect(result.map(d => d.text)).toEqual(['fizzy']);
     });
 });

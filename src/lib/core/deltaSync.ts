@@ -119,16 +119,20 @@ export async function runDeltaSync(client: RelayApiClient): Promise<SyncResult> 
 
 /**
  * Start background sync: runs on app focus (visibilitychange to visible)
- * and every 15 minutes. Returns a cleanup function.
+ * and every 15 minutes. `onSynced` is called after each successful cycle so
+ * callers can refresh UI state. Returns a cleanup function.
  */
 export function startBackgroundSync(
     getClient: () => RelayApiClient,
-    intervalMs: number = SYNC_INTERVAL_MS
+    intervalMs: number = SYNC_INTERVAL_MS,
+    onSynced?: (result: SyncResult) => void
 ): () => void {
     if (typeof window === 'undefined') return () => {};
 
     const runSync = (): void => {
-        runDeltaSync(getClient()).catch(() => {});
+        runDeltaSync(getClient())
+            .then(result => onSynced?.(result))
+            .catch(() => {});
     };
 
     const onVisibilityChange = (): void => {

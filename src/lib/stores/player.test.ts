@@ -315,6 +315,30 @@ describe('completion', () => {
         // State is completed, currentPhaseIndex stays at last valid index
         expect(get(playerStore).state).toBe('completed');
     });
+
+    it('saveCompleted() persists input recorded after completion with all phases counted', async () => {
+        await playerStore.load(BEGINNER_ID);
+        playerStore.start();
+        const exercise = get(playerStore).exercise!;
+        for (let i = 0; i < exercise.phases.length; i++) {
+            playerStore.skipPhase();
+        }
+        const lastPhase = exercise.phases[exercise.phases.length - 1];
+        playerStore.recordEmotion(lastPhase.id, 'calm', 'heart');
+        await playerStore.saveCompleted();
+        const sessions = await getAllSessions();
+        expect(sessions).toHaveLength(1);
+        expect(sessions[0].state).toBe('completed');
+        expect(sessions[0].phasesCompleted).toBe(exercise.phases.length);
+        expect(sessions[0].emotionConnections.map(e => e.emotion)).toEqual(['calm']);
+    });
+
+    it('saveCompleted() does nothing before completion', async () => {
+        await playerStore.load(BEGINNER_ID);
+        playerStore.start();
+        await playerStore.saveCompleted();
+        expect(await getAllSessions()).toHaveLength(0);
+    });
 });
 
 // =============================================================================

@@ -149,8 +149,11 @@ export function triggerDownload(data: ExportData): void {
     const a = document.createElement('a');
     a.href = url;
     a.download = `inward-data-${new Date().toISOString().slice(0, 10)}.json`;
+    // Firefox needs the link in the document, and revoking synchronously can cancel the download
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export async function deleteAllData(): Promise<void> {
@@ -163,5 +166,7 @@ export async function deleteAllData(): Promise<void> {
         db.clear('assessments'),
         db.clear('settings'),
         db.clear('offlineQueue'),
+        // Device ID and sync cursor: a stale cursor would stop shared vocabulary from re-syncing
+        db.clear('syncMeta'),
     ]);
 }

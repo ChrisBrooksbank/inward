@@ -282,6 +282,16 @@ describe('startBackgroundSync', () => {
         global.window = origWindow;
     });
 
+    it('calls onSynced with the result after a successful background sync', async () => {
+        const client = makeClient();
+        const onSynced = vi.fn();
+        const cleanup = startBackgroundSync(() => client as never, 999_999, onSynced);
+        window.dispatchEvent(new Event('focus'));
+        await vi.waitFor(() => expect(onSynced).toHaveBeenCalled());
+        expect(onSynced.mock.calls[0][0]).toMatchObject({ success: true });
+        cleanup();
+    });
+
     it('triggers sync on visibilitychange to visible', async () => {
         const client = makeClient();
         const cleanup = startBackgroundSync(() => client as never, 999_999);
