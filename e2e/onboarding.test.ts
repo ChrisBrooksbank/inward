@@ -20,7 +20,7 @@ interface OnboardingRecord {
 async function getSettingsFromDB(page: Page): Promise<OnboardingRecord | null> {
     return page.evaluate((dbName: string) => {
         return new Promise<OnboardingRecord | null>((resolve, reject) => {
-            const req = indexedDB.open(dbName, 1);
+            const req = indexedDB.open(dbName);
             req.onsuccess = () => {
                 const db = req.result;
                 const tx = db.transaction('settings', 'readonly');
@@ -64,9 +64,9 @@ test.describe('Onboarding flow', () => {
         ).toBeVisible();
         await page.getByRole('button', { name: 'Skip this assessment' }).click();
 
-        // Step 5: First Exercise
+        // Step 5: First Exercise — defer it
         await expect(page.getByRole('heading', { name: 'Try Your First Exercise' })).toBeVisible();
-        await page.getByRole('button', { name: 'Start Exercise' }).click();
+        await page.getByRole('button', { name: /try this later/ }).click();
 
         // Step 6: Complete
         await expect(page.getByRole('heading', { name: "You're All Set!" })).toBeVisible();
@@ -78,6 +78,24 @@ test.describe('Onboarding flow', () => {
         // onboardingComplete flag persisted in IndexedDB
         const settings = await getSettingsFromDB(page);
         expect(settings?.onboardingComplete).toBe(true);
+    });
+
+    test('Start Exercise on the first-exercise step opens the exercise player', async ({
+        page,
+    }) => {
+        await page.goto('/onboarding');
+        await page.getByRole('button', { name: 'Get Started' }).click();
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('button', { name: 'Skip this assessment' }).click();
+        await expect(page.getByRole('heading', { name: 'Try Your First Exercise' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start Exercise' }).click();
+
+        await expect(page).toHaveURL(/\/exercise\/00000000-0000-4000-8000-000000000007/);
+        await expect(page.getByRole('heading', { name: 'Heart After Movement' })).toBeVisible();
+
+        const settings = await getSettingsFromDB(page);
+        expect(settings?.onboardingStep).toBe(5);
     });
 
     test('can skip entire onboarding from the welcome screen', async ({ page }) => {

@@ -62,7 +62,8 @@ export interface InwardDB extends DBSchema {
 }
 
 type Db = IDBPDatabase<InwardDB>;
-let _db: Db | null = null;
+// Cache the open promise so concurrent first callers share one connection
+let _db: Promise<Db> | null = null;
 
 function createSessionsStore(db: Db): void {
     const store = db.createObjectStore('sessions', { keyPath: 'id' });
@@ -110,19 +111,25 @@ function upgradeDb(db: Db, oldVersion: number): void {
     }
 }
 
-export async function getDb(): Promise<Db> {
-    if (_db) return _db;
-    _db = await openDB<InwardDB>(DB_NAME, DB_VERSION, {
-        upgrade(db, oldVersion) {
-            upgradeDb(db, oldVersion);
-        },
-    });
+export function getDb(): Promise<Db> {
+    if (!_db) {
+        const opening = openDB<InwardDB>(DB_NAME, DB_VERSION, {
+            upgrade(db, oldVersion) {
+                upgradeDb(db, oldVersion);
+            },
+        });
+        // Allow a retry on the next call if opening fails
+        opening.catch(() => {
+            if (_db === opening) _db = null;
+        });
+        _db = opening;
+    }
     return _db;
 }
 
 /** Reset cached DB instance — call in tests before each test case. */
 export function resetDb(): void {
-    _db?.close();
+    _db?.then(db => db.close()).catch(() => {});
     _db = null;
 }
 

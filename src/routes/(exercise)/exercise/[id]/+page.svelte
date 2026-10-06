@@ -5,8 +5,11 @@
     import { playerStore, currentPhase, exerciseProgress, phaseProgress } from '$lib/stores/player';
     import { vocabularyStore, sharedVocabularyStore } from '$lib/stores';
     import { CircularTimer, VocabSuggestionsPanel } from '$lib/components';
-    import { getContextualSuggestions } from '$lib/components/vocabulary/vocab-suggestions-panel';
-    import type { SensationDescription } from '$lib/types/domain';
+    import {
+        descriptionsFromSession,
+        getContextualSuggestions,
+    } from '$lib/components/vocabulary/vocab-suggestions-panel';
+    import type { Exercise, ExercisePhase, SensationDescription } from '$lib/types/domain';
     import {
         getPhaseIcon,
         getPhaseLabel,
@@ -30,25 +33,57 @@
 
     // Track previous phase index to save pending data on phase change
     let savedPhaseIndex = -1;
+    // The final phase never changes the index, so its input is flushed on completion
+    let completionHandled = false;
+
+    function flushPendingInput(phase: ExercisePhase, exercise: Exercise): void {
+        const region = phase.bodyRegion ?? exercise.bodyRegions[0];
+        if (phase.type === 'describe' && pendingDescription.trim()) {
+            playerStore.recordDescription(phase.id, pendingDescription.trim(), region);
+        }
+        if (phase.type === 'reflect' && pendingEmotion?.trim()) {
+            playerStore.recordEmotion(phase.id, pendingEmotion.trim(), region);
+        }
+        pendingDescription = '';
+        pendingEmotion = null;
+    }
+
+    async function handleCompletion(phase: ExercisePhase, exercise: Exercise): Promise<void> {
+        flushPendingInput(phase, exercise);
+        await playerStore.saveCompleted();
+        await saveSessionVocabulary();
+    }
+
+    async function saveSessionVocabulary(): Promise<void> {
+        const s = $playerStore;
+        if (!s.exercise || !s.sessionId) return;
+        const entries = descriptionsFromSession(
+            s.descriptions,
+            $vocabularyStore,
+            s.exercise.id,
+            s.sessionId
+        );
+        for (const entry of entries) {
+            await vocabularyStore.add(entry);
+        }
+    }
 
     $effect(() => {
         const idx = $playerStore.currentPhaseIndex;
         const exercise = $playerStore.exercise;
+        const state = $playerStore.state;
         if (idx !== savedPhaseIndex && exercise && savedPhaseIndex >= 0) {
             const prevPhase = exercise.phases[savedPhaseIndex];
-            const region = prevPhase.bodyRegion ?? exercise.bodyRegions[0];
-            untrack(() => {
-                if (prevPhase.type === 'describe' && pendingDescription.trim()) {
-                    playerStore.recordDescription(prevPhase.id, pendingDescription.trim(), region);
-                }
-                if (prevPhase.type === 'reflect' && pendingEmotion) {
-                    playerStore.recordEmotion(prevPhase.id, pendingEmotion, region);
-                }
-                pendingDescription = '';
-                pendingEmotion = null;
-            });
+            untrack(() => flushPendingInput(prevPhase, exercise));
         }
         savedPhaseIndex = idx;
+
+        if (state !== 'completed') {
+            completionHandled = false;
+        } else if (exercise && !completionHandled) {
+            completionHandled = true;
+            untrack(() => void handleCompletion(exercise.phases[idx], exercise));
+        }
     });
 
     onMount(() => {
@@ -80,8 +115,11 @@
 
     async function handleExit(): Promise<void> {
         showExitConfirm = false;
+        // Keep whatever was typed in the current phase before saving the partial session
+        const exercise = $playerStore.exercise;
+        const current = $currentPhase;
+        if (exercise && current) flushPendingInput(current, exercise);
         await playerStore.exit();
-        await goto('/exercises');
     }
 
     function handleEmotionChip(emotion: string): void {

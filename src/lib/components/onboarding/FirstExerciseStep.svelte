@@ -4,9 +4,13 @@
     import { onboardingStep } from '$lib/stores/onboarding';
     import { goto } from '$app/navigation';
 
+    // "Heart After Movement" from the seed exercises
+    const FIRST_EXERCISE_ID = '00000000-0000-4000-8000-000000000007';
+
     async function handleStartExercise(): Promise<void> {
-        // Exercise player not yet built — advance to complete screen
+        // Advance first so the user lands on the completion step afterwards
         await onboardingStep.advance();
+        await goto(`/exercise/${FIRST_EXERCISE_ID}`);
     }
 
     async function handleSkipExercise(): Promise<void> {

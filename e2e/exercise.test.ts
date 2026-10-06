@@ -76,12 +76,13 @@ async function seedOnboardingComplete(page: Page): Promise<void> {
 interface SessionRecord {
     exerciseId: string;
     state: string;
+    emotionConnections: { emotion: string }[];
 }
 
 async function getAllSessions(page: Page): Promise<SessionRecord[]> {
     return page.evaluate((dbName: string) => {
         return new Promise<SessionRecord[]>((resolve, reject) => {
-            const req = indexedDB.open(dbName, 1);
+            const req = indexedDB.open(dbName);
             req.onsuccess = () => {
                 const db = req.result;
                 const tx = db.transaction('sessions', 'readonly');
@@ -140,7 +141,7 @@ test.describe('Exercise flow', () => {
         // Phases 2–5: notice — minimal UI (no buttons), advance through each via fake clock
         for (let i = 0; i < 4; i++) {
             await expect(page.getByText('Notice', { exact: true })).toBeVisible();
-            await page.clock.tick(21_000);
+            await page.clock.runFor(21_000);
         }
 
         // Phase 6: describe — text input + Continue button
@@ -148,13 +149,23 @@ test.describe('Exercise flow', () => {
         await page.getByLabel('Describe your sensation').fill('tight and warm');
         await page.getByRole('button', { name: 'Continue' }).click();
 
-        // Phase 7: reflect — emotion chips + Continue button
+        // Phase 7: reflect — pick an emotion chip, then Continue (final phase)
         await expect(page.getByText('Reflect', { exact: true })).toBeVisible();
+        const emotionChip = page
+            .getByRole('group', { name: 'Emotion suggestions' })
+            .getByRole('button')
+            .first();
+        const emotion = (await emotionChip.textContent())?.trim() ?? '';
+        await emotionChip.click();
         await page.getByRole('button', { name: 'Continue' }).click();
 
         // Completion: skip post-exercise emotion tagging
         await expect(page.getByRole('heading', { name: 'How did that feel?' })).toBeVisible();
         await page.getByRole('button', { name: 'Skip' }).click();
+
+        // Vocabulary suggestions from the community
+        await expect(page.getByRole('heading', { name: 'Others describe this as…' })).toBeVisible();
+        await page.getByRole('button', { name: 'Continue' }).click();
 
         // Well done screen
         await expect(page.getByRole('heading', { name: 'Well done!' })).toBeVisible();
@@ -169,6 +180,12 @@ test.describe('Exercise flow', () => {
         const session = sessions.find(s => s.exerciseId === QUICK_BODY_SCAN_ID);
         expect(session).toBeDefined();
         expect(session?.state).toBe('completed');
+        // Input from the final reflect phase is kept
+        expect(session?.emotionConnections.map(e => e.emotion)).toContain(emotion);
+
+        // The typed description is added to the personal vocabulary
+        await page.goto('/vocabulary');
+        await expect(page.getByText('tight and warm')).toBeVisible();
     });
 
     test('can pause and resume an exercise', async ({ page }) => {
@@ -184,7 +201,7 @@ test.describe('Exercise flow', () => {
         await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
 
         // Resume from paused overlay
-        await page.getByRole('button', { name: 'Resume' }).click();
+        await page.getByRole('button', { name: 'Resume', exact: true }).click();
         await expect(page.getByText('Instruction', { exact: true })).toBeVisible();
     });
 

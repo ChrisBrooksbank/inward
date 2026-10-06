@@ -95,7 +95,8 @@ function buildSession(s: PlayerStoreState, finalState: SessionState): ExerciseSe
         state: finalState,
         startedAt: s.startedAt ?? new Date(),
         completedAt: new Date(),
-        phasesCompleted: s.currentPhaseIndex,
+        // A completed session has finished every phase, including the one it ended on
+        phasesCompleted: finalState === 'completed' ? exercise.phases.length : s.currentPhaseIndex,
         totalPhases: exercise.phases.length,
         descriptions: s.descriptions,
         emotionConnections: s.emotionConnections,
@@ -205,6 +206,16 @@ function createPlayerStore() {
                 return { ...s, emotionConnections: [...s.emotionConnections, entry] };
             });
             const s = get(playerStore);
+            await persistSession(s, 'completed');
+        },
+
+        /**
+         * Re-persist a completed session. Call after recording input captured
+         * during the final phase, which only arrives once the player has completed.
+         */
+        async saveCompleted(): Promise<void> {
+            const s = get(playerStore);
+            if (s.state !== 'completed') return;
             await persistSession(s, 'completed');
         },
 
