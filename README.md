@@ -1,3 +1,5 @@
+
+**Live demo:** [inward-app.netlify.app](https://inward-app.netlify.app)
 <p align="center">
   <img src="docs/media/banner.svg" alt="Inward — learn to listen to your body" width="100%" />
 </p>
