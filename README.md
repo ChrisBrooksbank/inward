@@ -1,3 +1,7 @@
+<!-- hub-link -->
+> Part of [Chris's app hub](https://chrisbrooksbank-hub.netlify.app) - a directory of all my deployed apps.
+<!-- /hub-link -->
+
 
 **Live demo:** [inward-app.netlify.app](https://inward-app.netlify.app)
 <p align="center">
